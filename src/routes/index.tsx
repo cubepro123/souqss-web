@@ -1,4 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import logoImg from "@/assets/logo.png";
+
+type DbListing = {
+  id: string;
+  title: string;
+  price: number | null;
+  currency: string;
+  city: string | null;
+  category: string;
+  condition: string | null;
+  images: string[];
+  created_at: string;
+};
 
 export const Route = createFileRoute("/")({
   component: Home,
