@@ -92,19 +92,16 @@ const SHOPS = [
 ];
 
 function Header() {
+  const { user } = useAuth();
   return (
     <header className="bg-card border-b border-border sticky top-0 z-30">
       <div className="max-w-[1280px] mx-auto px-4 h-16 flex items-center gap-6">
-        <a href="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-brand flex items-center justify-center shadow-[0_4px_14px_oklch(0.64_0.18_38_/_0.35)]">
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="white" strokeWidth="2.2">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
-            </svg>
-          </div>
+        <Link to="/" className="flex items-center gap-2.5">
+          <img src={logoImg} alt="SouqSS" className="w-9 h-9 rounded-xl shadow-[0_4px_14px_oklch(0.64_0.18_38_/_0.25)]" />
           <div className="text-[22px] font-extrabold tracking-tight leading-none">
             <span className="text-brand">souq</span><span className="text-foreground">SS</span>
           </div>
-        </a>
+        </Link>
         <nav className="hidden lg:flex items-center gap-5 text-[14px] font-semibold text-muted-foreground">
           <a className="hover:text-foreground cursor-pointer">Browse</a>
           <a className="hover:text-foreground cursor-pointer">Shops</a>
@@ -112,11 +109,15 @@ function Header() {
           <a className="hover:text-foreground cursor-pointer">Help</a>
         </nav>
         <div className="ml-auto flex items-center gap-3">
-          <a className="hidden sm:inline text-[14px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer">Sign in</a>
-          <button className="bg-brand hover:bg-brand-dark transition text-white font-bold px-5 py-2.5 rounded-xl text-[14px] flex items-center gap-2 shadow-[0_4px_14px_oklch(0.64_0.18_38_/_0.3)]">
+          {user ? (
+            <Link to="/profile" className="hidden sm:inline text-[14px] font-semibold text-foreground hover:text-brand">My account</Link>
+          ) : (
+            <Link to="/auth" className="hidden sm:inline text-[14px] font-semibold text-muted-foreground hover:text-foreground">Sign in</Link>
+          )}
+          <Link to={user ? "/post-ad" : "/auth"} className="bg-brand hover:bg-brand-dark transition text-white font-bold px-5 py-2.5 rounded-xl text-[14px] flex items-center gap-2 shadow-[0_4px_14px_oklch(0.64_0.18_38_/_0.3)]">
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Post Ad
-          </button>
+          </Link>
         </div>
       </div>
     </header>
