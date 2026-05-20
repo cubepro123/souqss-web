@@ -330,6 +330,12 @@ function Footer() {
 }
 
 function Home() {
+  const [live, setLive] = useState<DbListing[]>([]);
+  useEffect(() => {
+    supabase.from("listings").select("id,title,price,currency,city,category,condition,images,created_at").eq("status", "active").order("created_at", { ascending: false }).limit(24)
+      .then(({ data }) => setLive(data || []));
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
