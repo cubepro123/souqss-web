@@ -1,0 +1,2 @@
+
+DROP POLICY IF EXISTS "Listing images are publicly accessible" ON storage.objects;
