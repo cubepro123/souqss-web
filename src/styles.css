@@ -8,7 +8,6 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -25,48 +24,44 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-brand: var(--brand);
-  --color-brand-2: var(--brand-2);
-  --color-gold: var(--gold);
-  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --color-brand-dark: var(--brand-dark);
+  --color-cta: var(--cta);
+  --color-price: var(--price);
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
-  --radius: 0.875rem;
-  --background: oklch(0.965 0.008 70);
-  --foreground: oklch(0.22 0.02 50);
+  --radius: 0.5rem;
+  --background: oklch(0.975 0.005 250);     /* light grey-blue page bg */
+  --foreground: oklch(0.18 0.01 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 50);
-  --primary: oklch(0.63 0.17 38);          /* brand orange #D4522B */
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.008 70);
-  --secondary-foreground: oklch(0.22 0.02 50);
-  --muted: oklch(0.96 0.008 70);
-  --muted-foreground: oklch(0.55 0.025 55);
-  --accent: oklch(0.96 0.008 70);
-  --accent-foreground: oklch(0.22 0.02 50);
-  --border: oklch(0.92 0.012 70);
-  --input: oklch(0.92 0.012 70);
-  --ring: oklch(0.63 0.17 38);
-  --brand: oklch(0.63 0.17 38);            /* #D4522B orange */
-  --brand-2: oklch(0.53 0.12 155);         /* #2B7A4B green */
-  --gold: oklch(0.72 0.13 80);             /* #C9920A */
-  --sub: oklch(0.55 0.025 55);
+  --card-foreground: oklch(0.18 0.01 250);
+  --primary: oklch(0.62 0.18 145);          /* jiji green */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.96 0.005 250);
+  --secondary-foreground: oklch(0.18 0.01 250);
+  --muted: oklch(0.96 0.005 250);
+  --muted-foreground: oklch(0.5 0.015 250);
+  --accent: oklch(0.95 0.01 145);
+  --accent-foreground: oklch(0.18 0.01 250);
+  --border: oklch(0.91 0.008 250);
+  --input: oklch(0.91 0.008 250);
+  --ring: oklch(0.62 0.18 145);
+  --brand: oklch(0.62 0.18 145);            /* main green */
+  --brand-dark: oklch(0.55 0.18 145);
+  --cta: oklch(0.72 0.17 55);               /* orange SELL button */
+  --price: oklch(0.55 0.17 145);            /* green price text */
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 50);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0 0);
+  --popover-foreground: oklch(0.18 0.01 250);
+  --destructive: oklch(0.6 0.22 27);
+  --destructive-foreground: oklch(1 0 0);
 }
 
 @layer base {
   * { border-color: var(--color-border); }
-  html, body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  html, body { font-family: 'Inter', sans-serif; }
   body { background-color: var(--color-background); color: var(--color-foreground); }
 }
 
-/* Hide scrollbars utility */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
-
-/* Thin scrollbar */
-.thin-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-.thin-scrollbar::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
