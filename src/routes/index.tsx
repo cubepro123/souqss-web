@@ -319,9 +319,28 @@ function Home() {
       <Hero />
 
       <main className="max-w-[1280px] mx-auto px-4 -mt-14 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
-          <CategoryList />
+        {/* Category chip row (from the app) */}
+        <div className="bg-card border border-border rounded-2xl p-2 mb-5 flex gap-2 overflow-x-auto no-scrollbar shadow-sm">
+          {[
+            { l: "All", on: true },
+            { l: "🏪 Shops" }, { l: "🛍️ For Sale" }, { l: "🔧 Services" }, { l: "🏠 Real Estate" },
+            { l: "💻 Electronics" }, { l: "🚗 Vehicles" }, { l: "💼 Jobs" }, { l: "🍽️ Food" }, { l: "🐾 Pets" },
+          ].map((c) => (
+            <button
+              key={c.l}
+              className={`px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 border-[1.5px] transition ${
+                c.on
+                  ? "bg-brand border-brand text-white shadow-[0_4px_12px_oklch(0.64_0.18_38_/_0.3)]"
+                  : "bg-card border-border text-muted-foreground hover:border-brand hover:text-brand"
+              }`}
+            >
+              {c.l}
+            </button>
+          ))}
+        </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
+          {/* LEFT: full ads + homepage */}
           <div>
             <StatBanner />
             <FeaturedShops />
@@ -348,8 +367,12 @@ function Home() {
               </button>
             </div>
           </div>
+
+          {/* RIGHT: categories */}
+          <CategoryList />
         </div>
       </main>
+
 
       <Footer />
     </div>
