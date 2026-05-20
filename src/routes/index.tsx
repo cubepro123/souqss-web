@@ -381,6 +381,26 @@ function Home() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+              {live.map((l) => (
+                <article key={l.id} className="group bg-card rounded-2xl overflow-hidden border border-border cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.12)] transition">
+                  <div className="relative aspect-square bg-muted overflow-hidden">
+                    {l.images?.[0] ? (
+                      <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-5xl">📦</div>
+                    )}
+                    <span className="absolute top-2.5 left-2.5 bg-cta text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md tracking-wider">NEW</span>
+                  </div>
+                  <div className="p-3">
+                    <div className="text-price font-extrabold text-[15px] mb-1 tracking-tight">{l.currency} {l.price?.toLocaleString() ?? "—"}</div>
+                    <div className="text-[13px] font-semibold text-foreground leading-snug mb-2 line-clamp-2 min-h-[34px]">{l.title}</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-[11.5px] text-muted-foreground truncate">{l.city || l.category}</div>
+                      {l.condition && <span className="text-[10.5px] bg-brand-soft text-brand-dark px-2 py-0.5 rounded font-bold shrink-0">{l.condition}</span>}
+                    </div>
+                  </div>
+                </article>
+              ))}
               {ADS.map((ad) => <AdCard key={ad.title} ad={ad} />)}
             </div>
 
