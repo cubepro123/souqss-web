@@ -18,21 +18,22 @@ export const Route = createFileRoute("/")({
 });
 
 const CATEGORIES = [
-  { name: "Vehicles", count: "12,837", icon: "🚗" },
-  { name: "Property", count: "4,886", icon: "🏘️" },
-  { name: "Phones & Tablets", count: "8,695", icon: "📱" },
-  { name: "Electronics", count: "6,072", icon: "💻" },
-  { name: "Home & Furniture", count: "7,045", icon: "🛋️" },
-  { name: "Fashion", count: "6,629", icon: "👗" },
-  { name: "Beauty & Care", count: "2,850", icon: "💄" },
+  { name: "Shops", count: "1,240", icon: "🏪" },
+  { name: "For Sale", count: "18,930", icon: "🛍️" },
   { name: "Services", count: "4,302", icon: "🔧" },
-  { name: "Repair & Construction", count: "2,161", icon: "🛠️" },
-  { name: "Leisure & Activities", count: "1,128", icon: "🎮" },
-  { name: "Babies & Kids", count: "1,857", icon: "🧸" },
-  { name: "Food & Farming", count: "3,646", icon: "🌾" },
+  { name: "Real Estate", count: "4,886", icon: "🏠" },
+  { name: "Electronics", count: "6,072", icon: "💻" },
+  { name: "Vehicles", count: "12,837", icon: "🚗" },
   { name: "Jobs", count: "2,431", icon: "💼" },
-  { name: "Pets", count: "612", icon: "🐕" },
+  { name: "Food", count: "3,646", icon: "🍽️" },
+  { name: "Pets", count: "612", icon: "🐾" },
+  { name: "Fashion", count: "6,629", icon: "👗" },
+  { name: "Home & Furniture", count: "7,045", icon: "🛋️" },
+  { name: "Beauty & Care", count: "2,850", icon: "💄" },
+  { name: "Babies & Kids", count: "1,857", icon: "🧸" },
+  { name: "Farming", count: "1,420", icon: "🌾" },
 ];
+
 
 const QUICK_CHIPS = ["iPhone", "Toyota Hilux", "Apartment Juba", "Solar panel", "Generator", "Office desks"];
 
