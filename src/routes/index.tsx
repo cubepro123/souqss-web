@@ -12,7 +12,7 @@ export const Route = createFileRoute("/")({
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" },
     ],
   }),
 });
@@ -22,25 +22,21 @@ const CATEGORIES = [
   { name: "Property", count: "4,886", icon: "🏘️" },
   { name: "Phones & Tablets", count: "8,695", icon: "📱" },
   { name: "Electronics", count: "6,072", icon: "💻" },
-  { name: "Home, Furniture & Appliances", count: "7,045", icon: "🛋️" },
+  { name: "Home & Furniture", count: "7,045", icon: "🛋️" },
   { name: "Fashion", count: "6,629", icon: "👗" },
-  { name: "Beauty & Personal Care", count: "2,850", icon: "💄" },
+  { name: "Beauty & Care", count: "2,850", icon: "💄" },
   { name: "Services", count: "4,302", icon: "🔧" },
   { name: "Repair & Construction", count: "2,161", icon: "🛠️" },
-  { name: "Commercial Equipment & Tools", count: "1,963", icon: "⚙️" },
   { name: "Leisure & Activities", count: "1,128", icon: "🎮" },
   { name: "Babies & Kids", count: "1,857", icon: "🧸" },
-  { name: "Food, Agriculture & Farming", count: "3,646", icon: "🌾" },
+  { name: "Food & Farming", count: "3,646", icon: "🌾" },
   { name: "Jobs", count: "2,431", icon: "💼" },
   { name: "Pets", count: "612", icon: "🐕" },
 ];
 
-const INFO_CARDS = [
-  { title: "Niche Intelligence", bg: "bg-[#EDE2FA]", icon: "🔍" },
-  { title: "Apply for job", bg: "bg-[#FEF3D2]", icon: "💼" },
-  { title: "How to sell", bg: "bg-[#DDF2E8]", icon: "💰" },
-  { title: "How to buy", bg: "bg-[#DCE9FA]", icon: "🛒" },
-];
+const QUICK_CHIPS = ["iPhone", "Toyota Hilux", "Apartment Juba", "Solar panel", "Generator", "Office desks"];
+
+const CITIES = ["All South Sudan", "Juba", "Wau", "Malakal", "Yei", "Aweil", "Bor", "Rumbek"];
 
 type Ad = {
   title: string;
@@ -49,43 +45,62 @@ type Ad = {
   emoji: string;
   bg: string;
   verified?: boolean;
-  enterprise?: boolean;
-  years?: string;
+  premium?: boolean;
+  badge?: string;
   condition?: string;
-  rating?: string;
 };
 
 const ADS: Ad[] = [
-  { title: "iPhone 14 Pro Max 256GB", price: "SSP 1,250,000", location: "Juba, Hai Cinema", emoji: "📱", bg: "bg-[#FDE8DF]", verified: true, years: "5+ YEARS ON SOUQSS", condition: "Brand New" },
-  { title: "Kenda Tires Sizes 225/45zr18", price: "SSP 95,000", location: "Juba, Custom Market", emoji: "🛞", bg: "bg-[#1a1a1a]/5", verified: true, enterprise: true, years: "5+ YEARS ON SOUQSS", condition: "Brand New" },
-  { title: "235/65r17 Comforser Cf1100 All Terrain Tires", price: "SSP 130,000", location: "Juba, Ridgeways", emoji: "🛞", bg: "bg-[#2a2a2a]/5", years: "3+ YEARS ON SOUQSS", condition: "Brand New" },
-  { title: "BMW 1 Series F20 Front Shock Mount", price: "SSP 53,000", location: "Juba, Industrial Area", emoji: "🔩", bg: "bg-[#DCE9FA]", verified: true, enterprise: true, rating: "4.8", condition: "Brand New" },
-  { title: "Toyota Hilux 2018 Double Cabin, Low Mileage", price: "SSP 38,000,000", location: "Juba, Tongping", emoji: "🚙", bg: "bg-[#FDE8DF]", verified: true, condition: "Used" },
-  { title: "3-Bedroom Apartment, Fully Furnished", price: "SSP 450,000/mo", location: "Juba, Hai Malakal", emoji: "🏘️", bg: "bg-[#DDF2E8]", verified: true, condition: "Long Term" },
-  { title: "MacBook Pro M2 16-inch with AppleCare", price: "SSP 2,400,000", location: "Juba, Thongping", emoji: "💻", bg: "bg-[#EDE2FA]", years: "2+ YEARS ON SOUQSS", condition: "Like New" },
-  { title: "Solar Panel 450W Mono + Free Installation", price: "SSP 320,000", location: "Greater Juba", emoji: "☀️", bg: "bg-[#FEF3D2]", verified: true, enterprise: true, condition: "Brand New" },
-  { title: "Traditional Wedding Dress Custom Tailoring", price: "SSP 85,000", location: "Juba, Konyo Konyo", emoji: "👗", bg: "bg-[#EDE2FA]", condition: "Made to order" },
-  { title: "Fresh Yei Mangoes 50kg Crate, Direct from Farm", price: "SSP 28,000", location: "Yei → Juba", emoji: "🥭", bg: "bg-[#FEF3D2]", verified: true, condition: "Fresh" },
-  { title: "L-shape Leather Sofa Set 7-seater", price: "SSP 320,000", location: "Juba, Munuki", emoji: "🛋️", bg: "bg-[#FDE8DF]", condition: "Used" },
-  { title: "Honda CG 125 Boda Boda, Excellent Condition", price: "SSP 1,800,000", location: "Juba, Jebel", emoji: "🏍️", bg: "bg-[#DCE9FA]", verified: true, condition: "Used" },
+  { title: "iPhone 14 Pro Max 256GB — sealed in box", price: "SSP 1,250,000", location: "Juba, Hai Cinema", emoji: "📱", bg: "bg-[#FDE8DF]", verified: true, premium: true, condition: "Brand New" },
+  { title: "Toyota Hilux 2018 Double Cabin, low mileage", price: "SSP 38,000,000", location: "Juba, Tongping", emoji: "🚙", bg: "bg-[#DCE9FA]", verified: true, badge: "Top Seller", condition: "Used" },
+  { title: "3-Bedroom apartment fully furnished, Hai Malakal", price: "SSP 450,000/mo", location: "Juba, Hai Malakal", emoji: "🏘️", bg: "bg-[#DDF2E8]", verified: true, condition: "Long Term" },
+  { title: "BMW 1 Series F20 Front Shock Mount — OEM", price: "SSP 53,000", location: "Juba, Industrial Area", emoji: "🔩", bg: "bg-[#EDE2FA]", premium: true, condition: "Brand New" },
+  { title: "MacBook Pro M2 16-inch with AppleCare+", price: "SSP 2,400,000", location: "Juba, Thongping", emoji: "💻", bg: "bg-[#FEF3D2]", verified: true, condition: "Like New" },
+  { title: "Solar Panel 450W Mono + free installation", price: "SSP 320,000", location: "Greater Juba", emoji: "☀️", bg: "bg-[#FEF3D2]", premium: true, badge: "Eco", condition: "Brand New" },
+  { title: "Traditional wedding dress — custom tailoring", price: "SSP 85,000", location: "Juba, Konyo Konyo", emoji: "👗", bg: "bg-[#EDE2FA]", condition: "Made to order" },
+  { title: "Fresh Yei mangoes 50kg crate, farm direct", price: "SSP 28,000", location: "Yei → Juba", emoji: "🥭", bg: "bg-[#FEF3D2]", verified: true, condition: "Fresh" },
+  { title: "L-shape leather sofa set, 7-seater", price: "SSP 320,000", location: "Juba, Munuki", emoji: "🛋️", bg: "bg-[#FDE8DF]", condition: "Used" },
+  { title: "Honda CG 125 boda boda, excellent condition", price: "SSP 1,800,000", location: "Juba, Jebel", emoji: "🏍️", bg: "bg-[#DCE9FA]", verified: true, condition: "Used" },
+  { title: "Generator 5KVA Honda silent series", price: "SSP 980,000", location: "Juba, Custom Market", emoji: "🔌", bg: "bg-[#DDF2E8]", premium: true, condition: "Brand New" },
+  { title: "Office desks bulk lot (10 pieces) — wood", price: "SSP 420,000", location: "Juba, Tongping", emoji: "🪑", bg: "bg-[#FDE8DF]", condition: "Used" },
 ];
 
-function HeaderBar() {
+const SHOPS = [
+  { name: "Nile Electronics", cat: "Phones & Tablets", logo: "📱", color: "from-[#D4522B] to-[#E8754D]" },
+  { name: "Juba Motors", cat: "Vehicles", logo: "🚗", color: "from-[#2B7A4B] to-[#3AA368]" },
+  { name: "Mama Akon Fashion", cat: "Fashion", logo: "👗", color: "from-[#C9920A] to-[#E8B23A]" },
+  { name: "Equatoria Builders", cat: "Services", logo: "🔧", color: "from-[#1C3BAA] to-[#3B5BD9]" },
+  { name: "Green Farm SS", cat: "Food & Farming", logo: "🥬", color: "from-[#2B7A4B] to-[#5BB87A]" },
+  { name: "Konyo Konyo Mart", cat: "General", logo: "🛍️", color: "from-[#D4522B] to-[#C9920A]" },
+];
+
+function Header() {
   return (
-    <header className="bg-brand text-white sticky top-0 z-30">
+    <header className="bg-card border-b border-border sticky top-0 z-30">
       <div className="max-w-[1280px] mx-auto px-4 h-16 flex items-center gap-6">
-        <a href="/" className="text-2xl font-extrabold tracking-tight italic">souq<span className="opacity-90">SS</span></a>
-        <div className="hidden md:block flex-1 text-center text-[15px] font-semibold tracking-wide opacity-95">
-          SELL FASTER, BUY SMARTER
-        </div>
-        <nav className="flex items-center gap-4 text-sm font-medium">
-          <a className="hidden sm:inline hover:underline cursor-pointer">Sign in</a>
-          <span className="hidden sm:inline opacity-50">|</span>
-          <a className="hidden sm:inline hover:underline cursor-pointer">Registration</a>
-          <button className="bg-cta hover:opacity-95 transition text-white font-extrabold px-7 py-2.5 rounded-md text-[15px] tracking-wide shadow-sm">
-            SELL
-          </button>
+        <a href="/" className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-brand flex items-center justify-center shadow-[0_4px_14px_oklch(0.64_0.18_38_/_0.35)]">
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="white" strokeWidth="2.2">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+          </div>
+          <div className="text-[22px] font-extrabold tracking-tight leading-none">
+            <span className="text-brand">souq</span><span className="text-foreground">SS</span>
+          </div>
+        </a>
+        <nav className="hidden lg:flex items-center gap-5 text-[14px] font-semibold text-muted-foreground">
+          <a className="hover:text-foreground cursor-pointer">Browse</a>
+          <a className="hover:text-foreground cursor-pointer">Shops</a>
+          <a className="hover:text-foreground cursor-pointer">Jobs</a>
+          <a className="hover:text-foreground cursor-pointer">Help</a>
         </nav>
+        <div className="ml-auto flex items-center gap-3">
+          <a className="hidden sm:inline text-[14px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer">Sign in</a>
+          <button className="bg-brand hover:bg-brand-dark transition text-white font-bold px-5 py-2.5 rounded-xl text-[14px] flex items-center gap-2 shadow-[0_4px_14px_oklch(0.64_0.18_38_/_0.3)]">
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Post Ad
+          </button>
+        </div>
       </div>
     </header>
   );
@@ -93,104 +108,173 @@ function HeaderBar() {
 
 function Hero() {
   return (
-    <section className="bg-brand relative">
-      <div className="max-w-[1280px] mx-auto px-4 pt-8 pb-24 text-center">
-        <h1 className="text-white text-2xl sm:text-3xl font-semibold mb-6">What are you looking for?</h1>
-        <div className="max-w-[680px] mx-auto bg-white rounded-md shadow-lg flex items-stretch overflow-hidden">
-          <button className="flex items-center gap-2 px-4 sm:px-5 border-r border-border text-foreground font-medium text-sm whitespace-nowrap hover:bg-muted transition">
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            All South Sudan
-            <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <input
-            className="flex-1 px-4 py-3.5 text-[15px] outline-none placeholder:text-muted-foreground"
-            placeholder="I am looking for..."
-          />
-          <button className="bg-cta hover:opacity-95 transition px-5 flex items-center justify-center text-white" aria-label="Search">
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <section className="relative overflow-hidden bg-gradient-to-br from-[oklch(0.64_0.18_38)] via-[oklch(0.58_0.17_35)] to-[oklch(0.5_0.14_30)]">
+      {/* subtle pattern dots */}
+      <div
+        className="absolute inset-0 opacity-[0.08]"
+        style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+      />
+      {/* soft blobs */}
+      <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
+      <div className="absolute -bottom-24 -left-12 w-80 h-80 rounded-full bg-[oklch(0.55_0.14_155)]/20 blur-3xl" />
+
+      <div className="relative max-w-[1280px] mx-auto px-4 pt-12 pb-32 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur text-white/90 text-[12px] font-semibold mb-5 border border-white/20">
+          <span className="w-1.5 h-1.5 rounded-full bg-[oklch(0.75_0.15_155)] animate-pulse" />
+          100,000+ active ads across South Sudan
+        </div>
+        <h1 className="text-white text-[34px] sm:text-[44px] font-extrabold leading-tight tracking-tight mb-2">
+          Buy & sell anything,<br className="sm:hidden" /> <span className="italic font-semibold opacity-90">close to home.</span>
+        </h1>
+        <p className="text-white/80 text-[15px] mb-7 max-w-[520px] mx-auto">
+          From Juba to Wau — find what you need or reach the right buyer in minutes.
+        </p>
+
+        <div className="max-w-[720px] mx-auto bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.35)] p-1.5 flex items-stretch gap-1.5">
+          <div className="hidden sm:flex items-center gap-2 px-3 text-foreground text-[14px] font-semibold border-r border-border whitespace-nowrap">
+            <svg viewBox="0 0 24 24" className="w-4 h-4 text-brand" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <select className="bg-transparent outline-none font-semibold pr-2 cursor-pointer">
+              {CITIES.map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <input className="flex-1 px-3 sm:px-4 py-3 text-[15px] outline-none bg-transparent placeholder:text-muted-foreground" placeholder="Search iPhone, Hilux, apartment…" />
+          <button className="bg-brand hover:bg-brand-dark transition text-white font-bold px-5 sm:px-7 rounded-xl flex items-center gap-2 text-[14px]" aria-label="Search">
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span className="hidden sm:inline">Search</span>
           </button>
         </div>
+
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <span className="text-white/70 text-[12px] font-semibold mr-1">Trending:</span>
+          {QUICK_CHIPS.map((q) => (
+            <button key={q} className="px-3 py-1 rounded-full bg-white/12 hover:bg-white/20 backdrop-blur text-white text-[12px] font-medium border border-white/20 transition">
+              {q}
+            </button>
+          ))}
+        </div>
       </div>
-      {/* Curved bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-12 bg-background" style={{ clipPath: "ellipse(75% 100% at 50% 100%)" }} />
+
+      {/* curved bottom */}
+      <svg className="absolute bottom-0 left-0 right-0 w-full text-background" viewBox="0 0 1440 60" preserveAspectRatio="none">
+        <path d="M0,30 Q360,60 720,30 T1440,30 L1440,60 L0,60 Z" fill="currentColor" />
+      </svg>
     </section>
   );
 }
 
 function CategoryList() {
   return (
-    <aside className="bg-card rounded-lg border border-border overflow-hidden">
-      {CATEGORIES.map((c, i) => (
-        <a
-          key={c.name}
-          className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted transition ${i !== CATEGORIES.length - 1 ? "border-b border-border" : ""}`}
-        >
-          <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center text-base shrink-0">{c.icon}</div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[13.5px] font-semibold text-foreground leading-tight">{c.name}</div>
-            <div className="text-[11.5px] text-muted-foreground mt-0.5">{c.count} ads</div>
-          </div>
-          <svg viewBox="0 0 24 24" className="w-4 h-4 text-muted-foreground shrink-0" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </a>
-      ))}
+    <aside>
+      <div className="bg-card rounded-2xl border border-border overflow-hidden">
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-gradient-to-r from-brand-soft to-transparent">
+          <h3 className="font-extrabold text-[14px] text-foreground">All Categories</h3>
+          <span className="text-[11px] font-bold text-brand">15</span>
+        </div>
+        <div className="max-h-[600px] overflow-y-auto no-scrollbar">
+          {CATEGORIES.map((c, i) => (
+            <a key={c.name} className={`group flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-brand-soft transition ${i !== CATEGORIES.length - 1 ? "border-b border-border" : ""}`}>
+              <div className="w-9 h-9 rounded-xl bg-muted group-hover:bg-white flex items-center justify-center text-base shrink-0 transition">{c.icon}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13.5px] font-semibold text-foreground leading-tight group-hover:text-brand transition">{c.name}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">{c.count} ads</div>
+              </div>
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-muted-foreground group-hover:text-brand group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Promo card */}
+      <div className="mt-4 relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-[oklch(0.3_0.05_50)] to-[oklch(0.18_0.02_50)] text-white">
+        <div className="absolute -top-8 -right-6 w-32 h-32 rounded-full bg-brand/30 blur-2xl" />
+        <div className="relative">
+          <div className="text-[11px] font-bold tracking-widest text-brand mb-2">PREMIUM</div>
+          <h4 className="font-extrabold text-[17px] leading-tight mb-1.5">Boost your ad to the top</h4>
+          <p className="text-white/70 text-[12px] mb-4 leading-relaxed">Get 5× more views and a verified seller badge. 30-day free trial.</p>
+          <button className="bg-white text-foreground font-bold text-[12.5px] px-4 py-2 rounded-lg hover:bg-brand-soft transition">Upgrade →</button>
+        </div>
+      </div>
     </aside>
   );
 }
 
-function InfoCards() {
+function StatBanner() {
+  const stats = [
+    { n: "100k+", l: "Active ads" },
+    { n: "50k+", l: "Trusted sellers" },
+    { n: "12", l: "Cities covered" },
+    { n: "4.8★", l: "Buyer rating" },
+  ];
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-      {INFO_CARDS.map((c) => (
-        <a key={c.title} className={`${c.bg} rounded-lg p-4 cursor-pointer hover:opacity-90 transition flex items-end justify-between min-h-[96px] relative overflow-hidden`}>
-          <span className="font-semibold text-[14px] text-foreground relative z-10">{c.title}</span>
-          <span className="text-4xl absolute top-2 right-3 opacity-90">{c.icon}</span>
-        </a>
+    <div className="grid grid-cols-2 sm:grid-cols-4 bg-card rounded-2xl border border-border overflow-hidden mb-5">
+      {stats.map((s, i) => (
+        <div key={s.l} className={`p-4 text-center ${i !== 0 ? "border-l border-border" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""}`}>
+          <div className="text-[20px] font-extrabold text-brand">{s.n}</div>
+          <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">{s.l}</div>
+        </div>
       ))}
     </div>
   );
 }
 
+function FeaturedShops() {
+  return (
+    <section className="mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-[18px] font-extrabold text-foreground flex items-center gap-2">🏪 Featured Shops</h2>
+        <a className="text-[12.5px] font-bold text-brand cursor-pointer hover:underline">See all →</a>
+      </div>
+      <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+        {SHOPS.map((s) => (
+          <div key={s.name} className="min-w-[160px] bg-card rounded-2xl overflow-hidden border border-border cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition shrink-0">
+            <div className={`h-14 bg-gradient-to-br ${s.color}`} />
+            <div className="px-3 pb-3">
+              <div className="w-11 h-11 rounded-xl border-[3px] border-card -mt-5 bg-muted flex items-center justify-center text-xl mb-1.5">{s.logo}</div>
+              <div className="text-[13px] font-bold truncate">{s.name}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{s.cat}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function AdCard({ ad }: { ad: Ad }) {
   return (
-    <article className={`bg-card rounded-lg overflow-hidden border ${ad.enterprise ? "border-brand border-2" : "border-border"} cursor-pointer hover:shadow-md transition relative`}>
-      {ad.enterprise && (
-        <div className="absolute top-0 left-0 bg-brand text-white text-[9px] font-extrabold px-2 py-0.5 tracking-wider z-10 rounded-br">
-          ENTERPRISE
+    <article className="group bg-card rounded-2xl overflow-hidden border border-border cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.12)] transition relative">
+      {ad.premium && (
+        <div className="absolute top-2.5 left-2.5 z-10 bg-foreground text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md tracking-wider flex items-center gap-1">
+          <span className="text-brand">★</span> PREMIUM
         </div>
       )}
-      <div className={`relative aspect-square ${ad.bg} flex items-center justify-center text-6xl`}>
-        <span>{ad.emoji}</span>
+      <div className={`relative aspect-square ${ad.bg} flex items-center justify-center text-[3.5rem]`}>
+        <span className="group-hover:scale-110 transition-transform duration-300">{ad.emoji}</span>
+        <button className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/95 backdrop-blur flex items-center justify-center hover:bg-white shadow-sm" aria-label="Save">
+          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-muted-foreground hover:text-brand transition" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+        </button>
+        {ad.badge && (
+          <span className="absolute bottom-2.5 left-2.5 bg-cta text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{ad.badge}</span>
+        )}
         {ad.verified && (
-          <span className="absolute top-2 right-2 bg-white/95 text-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-            <svg viewBox="0 0 24 24" className="w-3 h-3 text-brand" fill="currentColor"><path d="M12 2l3 6 6 .9-4.5 4.4 1 6.7L12 17l-5.5 3 1-6.7L3 8.9 9 8z"/></svg>
-            Verified ID
-          </span>
-        )}
-        {ad.rating && (
-          <span className="absolute top-9 right-2 bg-white/95 text-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
-            {ad.rating} <span className="text-amber-500">★★★★★</span>
-          </span>
-        )}
-        {ad.years && !ad.rating && (
-          <span className="absolute bottom-2 left-2 bg-white/95 text-foreground text-[9.5px] font-semibold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
-            <svg viewBox="0 0 24 24" className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/></svg>
-            {ad.years}
+          <span className="absolute bottom-2.5 right-2.5 bg-white/95 backdrop-blur text-foreground text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+            <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 text-cta" fill="currentColor"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg>
+            Verified
           </span>
         )}
       </div>
       <div className="p-3">
-        <div className="text-price font-extrabold text-[15px] mb-1">{ad.price}</div>
+        <div className="text-price font-extrabold text-[15px] mb-1 tracking-tight">{ad.price}</div>
         <div className="text-[13px] font-semibold text-foreground leading-snug mb-2 line-clamp-2 min-h-[34px]">{ad.title}</div>
-        <div className="text-[11.5px] text-muted-foreground flex items-center gap-1 mb-2">
-          <svg viewBox="0 0 24 24" className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span className="truncate">{ad.location}</span>
-        </div>
-        {ad.condition && (
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] bg-muted text-muted-foreground px-2 py-0.5 rounded font-medium">{ad.condition}</span>
-            <span className="text-base">🔥</span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-[11.5px] text-muted-foreground flex items-center gap-1 min-w-0">
+            <svg viewBox="0 0 24 24" className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span className="truncate">{ad.location}</span>
           </div>
-        )}
+          {ad.condition && (
+            <span className="text-[10.5px] bg-brand-soft text-brand-dark px-2 py-0.5 rounded font-bold shrink-0">{ad.condition}</span>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -198,26 +282,31 @@ function AdCard({ ad }: { ad: Ad }) {
 
 function Footer() {
   return (
-    <footer className="bg-[#1a1a1a] text-white/80 mt-16">
+    <footer className="bg-foreground text-white/80 mt-16">
       <div className="max-w-[1280px] mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
         <div>
-          <div className="text-2xl font-extrabold italic text-white mb-3">souqSS</div>
-          <p className="text-white/60 text-[13px]">South Sudan's largest marketplace. Sell faster, buy smarter.</p>
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center">
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/></svg>
+            </div>
+            <span className="text-xl font-extrabold text-white"><span className="text-brand">souq</span>SS</span>
+          </div>
+          <p className="text-white/60 text-[13px] leading-relaxed">South Sudan's largest marketplace. Sell faster, buy smarter.</p>
         </div>
         <div>
-          <h4 className="text-white font-bold mb-3 text-[13px] uppercase tracking-wide">SouqSS</h4>
-          <ul className="space-y-2 text-[13px]"><li>About us</li><li>Help & Contact</li><li>Press</li><li>Careers</li></ul>
+          <h4 className="text-white font-bold mb-3 text-[12px] uppercase tracking-wider">SouqSS</h4>
+          <ul className="space-y-2 text-[13px] text-white/60"><li className="hover:text-white cursor-pointer">About us</li><li className="hover:text-white cursor-pointer">Press</li><li className="hover:text-white cursor-pointer">Careers</li><li className="hover:text-white cursor-pointer">Contact</li></ul>
         </div>
         <div>
-          <h4 className="text-white font-bold mb-3 text-[13px] uppercase tracking-wide">Support</h4>
-          <ul className="space-y-2 text-[13px]"><li>How to sell</li><li>How to buy</li><li>Safety tips</li><li>Terms</li></ul>
+          <h4 className="text-white font-bold mb-3 text-[12px] uppercase tracking-wider">Support</h4>
+          <ul className="space-y-2 text-[13px] text-white/60"><li className="hover:text-white cursor-pointer">How to sell</li><li className="hover:text-white cursor-pointer">How to buy</li><li className="hover:text-white cursor-pointer">Safety tips</li><li className="hover:text-white cursor-pointer">Terms</li></ul>
         </div>
         <div>
-          <h4 className="text-white font-bold mb-3 text-[13px] uppercase tracking-wide">Follow us</h4>
-          <ul className="space-y-2 text-[13px]"><li>Facebook</li><li>Twitter / X</li><li>Instagram</li><li>YouTube</li></ul>
+          <h4 className="text-white font-bold mb-3 text-[12px] uppercase tracking-wider">Follow</h4>
+          <ul className="space-y-2 text-[13px] text-white/60"><li className="hover:text-white cursor-pointer">Facebook</li><li className="hover:text-white cursor-pointer">Twitter / X</li><li className="hover:text-white cursor-pointer">Instagram</li><li className="hover:text-white cursor-pointer">YouTube</li></ul>
         </div>
       </div>
-      <div className="border-t border-white/10 py-4 text-center text-[12px] text-white/50">© {new Date().getFullYear()} SouqSS. All rights reserved.</div>
+      <div className="border-t border-white/10 py-4 text-center text-[12px] text-white/50">© {new Date().getFullYear()} SouqSS — Made with ♥ in Juba.</div>
     </footer>
   );
 }
@@ -225,25 +314,26 @@ function Footer() {
 function Home() {
   return (
     <div className="min-h-screen bg-background">
-      <HeaderBar />
+      <Header />
       <Hero />
 
-      <main className="max-w-[1280px] mx-auto px-4 -mt-10 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5">
+      <main className="max-w-[1280px] mx-auto px-4 -mt-14 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
           <CategoryList />
 
           <div>
-            <InfoCards />
+            <StatBanner />
+            <FeaturedShops />
 
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[20px] font-extrabold text-foreground">Trending ads</h2>
-              <div className="flex gap-1">
-                <button className="w-8 h-8 rounded bg-card border border-border flex items-center justify-center text-brand" aria-label="Grid view">
-                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                </button>
-                <button className="w-8 h-8 rounded bg-card border border-border flex items-center justify-center text-muted-foreground" aria-label="List view">
-                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                </button>
+              <h2 className="text-[20px] font-extrabold text-foreground flex items-center gap-2">
+                <span className="w-1 h-6 bg-brand rounded-full" />
+                Fresh listings
+              </h2>
+              <div className="flex items-center gap-2">
+                <button className="text-[12.5px] font-bold text-brand bg-brand-soft px-3 py-1.5 rounded-full">Newest</button>
+                <button className="text-[12.5px] font-semibold text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-full">Price ↓</button>
+                <button className="text-[12.5px] font-semibold text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-full">Nearby</button>
               </div>
             </div>
 
@@ -252,8 +342,8 @@ function Home() {
             </div>
 
             <div className="text-center mt-8">
-              <button className="bg-card border border-border hover:bg-muted text-foreground font-semibold px-8 py-3 rounded-md text-sm transition">
-                Show more ads
+              <button className="bg-card border-2 border-border hover:border-brand hover:text-brand text-foreground font-bold px-8 py-3 rounded-xl text-[14px] transition">
+                Load more ads →
               </button>
             </div>
           </div>
