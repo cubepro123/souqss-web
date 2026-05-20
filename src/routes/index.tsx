@@ -18,21 +18,22 @@ export const Route = createFileRoute("/")({
 });
 
 const CATEGORIES = [
-  { name: "Vehicles", count: "12,837", icon: "🚗" },
-  { name: "Property", count: "4,886", icon: "🏘️" },
-  { name: "Phones & Tablets", count: "8,695", icon: "📱" },
-  { name: "Electronics", count: "6,072", icon: "💻" },
-  { name: "Home & Furniture", count: "7,045", icon: "🛋️" },
-  { name: "Fashion", count: "6,629", icon: "👗" },
-  { name: "Beauty & Care", count: "2,850", icon: "💄" },
+  { name: "Shops", count: "1,240", icon: "🏪" },
+  { name: "For Sale", count: "18,930", icon: "🛍️" },
   { name: "Services", count: "4,302", icon: "🔧" },
-  { name: "Repair & Construction", count: "2,161", icon: "🛠️" },
-  { name: "Leisure & Activities", count: "1,128", icon: "🎮" },
-  { name: "Babies & Kids", count: "1,857", icon: "🧸" },
-  { name: "Food & Farming", count: "3,646", icon: "🌾" },
+  { name: "Real Estate", count: "4,886", icon: "🏠" },
+  { name: "Electronics", count: "6,072", icon: "💻" },
+  { name: "Vehicles", count: "12,837", icon: "🚗" },
   { name: "Jobs", count: "2,431", icon: "💼" },
-  { name: "Pets", count: "612", icon: "🐕" },
+  { name: "Food", count: "3,646", icon: "🍽️" },
+  { name: "Pets", count: "612", icon: "🐾" },
+  { name: "Fashion", count: "6,629", icon: "👗" },
+  { name: "Home & Furniture", count: "7,045", icon: "🛋️" },
+  { name: "Beauty & Care", count: "2,850", icon: "💄" },
+  { name: "Babies & Kids", count: "1,857", icon: "🧸" },
+  { name: "Farming", count: "1,420", icon: "🌾" },
 ];
+
 
 const QUICK_CHIPS = ["iPhone", "Toyota Hilux", "Apartment Juba", "Solar panel", "Generator", "Office desks"];
 
@@ -318,9 +319,28 @@ function Home() {
       <Hero />
 
       <main className="max-w-[1280px] mx-auto px-4 -mt-14 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5">
-          <CategoryList />
+        {/* Category chip row (from the app) */}
+        <div className="bg-card border border-border rounded-2xl p-2 mb-5 flex gap-2 overflow-x-auto no-scrollbar shadow-sm">
+          {[
+            { l: "All", on: true },
+            { l: "🏪 Shops" }, { l: "🛍️ For Sale" }, { l: "🔧 Services" }, { l: "🏠 Real Estate" },
+            { l: "💻 Electronics" }, { l: "🚗 Vehicles" }, { l: "💼 Jobs" }, { l: "🍽️ Food" }, { l: "🐾 Pets" },
+          ].map((c) => (
+            <button
+              key={c.l}
+              className={`px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 border-[1.5px] transition ${
+                c.on
+                  ? "bg-brand border-brand text-white shadow-[0_4px_12px_oklch(0.64_0.18_38_/_0.3)]"
+                  : "bg-card border-border text-muted-foreground hover:border-brand hover:text-brand"
+              }`}
+            >
+              {c.l}
+            </button>
+          ))}
+        </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
+          {/* LEFT: full ads + homepage */}
           <div>
             <StatBanner />
             <FeaturedShops />
@@ -347,8 +367,12 @@ function Home() {
               </button>
             </div>
           </div>
+
+          {/* RIGHT: categories */}
+          <CategoryList />
         </div>
       </main>
+
 
       <Footer />
     </div>
