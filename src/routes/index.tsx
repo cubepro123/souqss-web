@@ -342,28 +342,21 @@ function Home() {
       <Hero />
 
       <main className="max-w-[1280px] mx-auto px-4 -mt-14 relative z-10">
-        {/* Category chip row (from the app) */}
+        {/* Category chip row */}
         <div className="bg-card border border-border rounded-2xl p-2 mb-5 flex gap-2 overflow-x-auto no-scrollbar shadow-sm">
+          <Link to="/browse" className="px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 border-[1.5px] bg-brand border-brand text-white shadow-[0_4px_12px_oklch(0.64_0.18_38_/_0.3)]">All</Link>
           {[
-            { l: "All", on: true },
-            { l: "🏪 Shops" }, { l: "🛍️ For Sale" }, { l: "🔧 Services" }, { l: "🏠 Real Estate" },
-            { l: "💻 Electronics" }, { l: "🚗 Vehicles" }, { l: "💼 Jobs" }, { l: "🍽️ Food" }, { l: "🐾 Pets" },
+            { l: "🛍️ For Sale", c: "For Sale" }, { l: "🔧 Services", c: "Services" }, { l: "🏠 Real Estate", c: "Real Estate" },
+            { l: "💻 Electronics", c: "Electronics" }, { l: "🚗 Vehicles", c: "Vehicles" }, { l: "💼 Jobs", c: "Jobs" },
+            { l: "🍽️ Food", c: "Food" }, { l: "🐾 Pets", c: "Pets" },
           ].map((c) => (
-            <button
-              key={c.l}
-              className={`px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 border-[1.5px] transition ${
-                c.on
-                  ? "bg-brand border-brand text-white shadow-[0_4px_12px_oklch(0.64_0.18_38_/_0.3)]"
-                  : "bg-card border-border text-muted-foreground hover:border-brand hover:text-brand"
-              }`}
-            >
+            <Link key={c.c} to="/browse" search={{ category: c.c }} className="px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 border-[1.5px] bg-card border-border text-muted-foreground hover:border-brand hover:text-brand transition">
               {c.l}
-            </button>
+            </Link>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
-          {/* LEFT: full ads + homepage */}
           <div>
             <StatBanner />
             <FeaturedShops />
@@ -373,16 +366,12 @@ function Home() {
                 <span className="w-1 h-6 bg-brand rounded-full" />
                 Fresh listings
               </h2>
-              <div className="flex items-center gap-2">
-                <button className="text-[12.5px] font-bold text-brand bg-brand-soft px-3 py-1.5 rounded-full">Newest</button>
-                <button className="text-[12.5px] font-semibold text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-full">Price ↓</button>
-                <button className="text-[12.5px] font-semibold text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-full">Nearby</button>
-              </div>
+              <Link to="/browse" className="text-[12.5px] font-bold text-brand hover:underline">See all →</Link>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
               {live.map((l) => (
-                <article key={l.id} className="group bg-card rounded-2xl overflow-hidden border border-border cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.12)] transition">
+                <Link key={l.id} to="/listings/$id" params={{ id: l.id }} className="group bg-card rounded-2xl overflow-hidden border border-border hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.12)] transition">
                   <div className="relative aspect-square bg-muted overflow-hidden">
                     {l.images?.[0] ? (
                       <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
@@ -399,15 +388,15 @@ function Home() {
                       {l.condition && <span className="text-[10.5px] bg-brand-soft text-brand-dark px-2 py-0.5 rounded font-bold shrink-0">{l.condition}</span>}
                     </div>
                   </div>
-                </article>
+                </Link>
               ))}
               {ADS.map((ad) => <AdCard key={ad.title} ad={ad} />)}
             </div>
 
             <div className="text-center mt-8">
-              <button className="bg-card border-2 border-border hover:border-brand hover:text-brand text-foreground font-bold px-8 py-3 rounded-xl text-[14px] transition">
-                Load more ads →
-              </button>
+              <Link to="/browse" className="inline-block bg-card border-2 border-border hover:border-brand hover:text-brand text-foreground font-bold px-8 py-3 rounded-xl text-[14px] transition">
+                Browse all listings →
+              </Link>
             </div>
           </div>
 
