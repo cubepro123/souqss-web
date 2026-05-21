@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -103,10 +103,9 @@ function Header() {
           </div>
         </Link>
         <nav className="hidden lg:flex items-center gap-5 text-[14px] font-semibold text-muted-foreground">
-          <a className="hover:text-foreground cursor-pointer">Browse</a>
-          <a className="hover:text-foreground cursor-pointer">Shops</a>
-          <a className="hover:text-foreground cursor-pointer">Jobs</a>
-          <a className="hover:text-foreground cursor-pointer">Help</a>
+          <Link to="/browse" className="hover:text-foreground">Browse</Link>
+          {user && <Link to="/favorites" className="hover:text-foreground">♥ Saved</Link>}
+          {user && <Link to="/profile" className="hover:text-foreground">My ads</Link>}
         </nav>
         <div className="ml-auto flex items-center gap-3">
           {user ? (
@@ -125,21 +124,23 @@ function Header() {
 }
 
 function Hero() {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+  const [city, setCity] = useState("All South Sudan");
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate({ to: "/browse", search: { q: query || undefined, city: city === "All South Sudan" ? undefined : city } });
+  };
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[oklch(0.64_0.18_38)] via-[oklch(0.58_0.17_35)] to-[oklch(0.5_0.14_30)]">
-      {/* subtle pattern dots */}
-      <div
-        className="absolute inset-0 opacity-[0.08]"
-        style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }}
-      />
-      {/* soft blobs */}
+      <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
       <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
       <div className="absolute -bottom-24 -left-12 w-80 h-80 rounded-full bg-[oklch(0.55_0.14_155)]/20 blur-3xl" />
 
       <div className="relative max-w-[1280px] mx-auto px-4 pt-12 pb-32 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur text-white/90 text-[12px] font-semibold mb-5 border border-white/20">
           <span className="w-1.5 h-1.5 rounded-full bg-[oklch(0.75_0.15_155)] animate-pulse" />
-          100,000+ active ads across South Sudan
+          South Sudan's marketplace
         </div>
         <h1 className="text-white text-[34px] sm:text-[44px] font-extrabold leading-tight tracking-tight mb-2">
           Buy & sell anything,<br className="sm:hidden" /> <span className="italic font-semibold opacity-90">close to home.</span>
@@ -148,31 +149,30 @@ function Hero() {
           From Juba to Wau — find what you need or reach the right buyer in minutes.
         </p>
 
-        <div className="max-w-[720px] mx-auto bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.35)] p-1.5 flex items-stretch gap-1.5">
+        <form onSubmit={submit} className="max-w-[720px] mx-auto bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.35)] p-1.5 flex items-stretch gap-1.5">
           <div className="hidden sm:flex items-center gap-2 px-3 text-foreground text-[14px] font-semibold border-r border-border whitespace-nowrap">
             <svg viewBox="0 0 24 24" className="w-4 h-4 text-brand" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <select className="bg-transparent outline-none font-semibold pr-2 cursor-pointer">
+            <select value={city} onChange={(e) => setCity(e.target.value)} className="bg-transparent outline-none font-semibold pr-2 cursor-pointer">
               {CITIES.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
-          <input className="flex-1 px-3 sm:px-4 py-3 text-[15px] outline-none bg-transparent placeholder:text-muted-foreground" placeholder="Search iPhone, Hilux, apartment…" />
-          <button className="bg-brand hover:bg-brand-dark transition text-white font-bold px-5 sm:px-7 rounded-xl flex items-center gap-2 text-[14px]" aria-label="Search">
+          <input value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 px-3 sm:px-4 py-3 text-[15px] outline-none bg-transparent placeholder:text-muted-foreground" placeholder="Search iPhone, Hilux, apartment…" />
+          <button type="submit" className="bg-brand hover:bg-brand-dark transition text-white font-bold px-5 sm:px-7 rounded-xl flex items-center gap-2 text-[14px]" aria-label="Search">
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <span className="hidden sm:inline">Search</span>
           </button>
-        </div>
+        </form>
 
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
           <span className="text-white/70 text-[12px] font-semibold mr-1">Trending:</span>
           {QUICK_CHIPS.map((q) => (
-            <button key={q} className="px-3 py-1 rounded-full bg-white/12 hover:bg-white/20 backdrop-blur text-white text-[12px] font-medium border border-white/20 transition">
+            <Link key={q} to="/browse" search={{ q }} className="px-3 py-1 rounded-full bg-white/12 hover:bg-white/20 backdrop-blur text-white text-[12px] font-medium border border-white/20 transition">
               {q}
-            </button>
+            </Link>
           ))}
         </div>
       </div>
 
-      {/* curved bottom */}
       <svg className="absolute bottom-0 left-0 right-0 w-full text-background" viewBox="0 0 1440 60" preserveAspectRatio="none">
         <path d="M0,30 Q360,60 720,30 T1440,30 L1440,60 L0,60 Z" fill="currentColor" />
       </svg>
