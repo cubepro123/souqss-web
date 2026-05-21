@@ -190,14 +190,14 @@ function CategoryList() {
         </div>
         <div className="max-h-[600px] overflow-y-auto no-scrollbar">
           {CATEGORIES.map((c, i) => (
-            <a key={c.name} className={`group flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-brand-soft transition ${i !== CATEGORIES.length - 1 ? "border-b border-border" : ""}`}>
+            <Link key={c.name} to="/browse" search={{ category: c.name }} className={`group flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-brand-soft transition ${i !== CATEGORIES.length - 1 ? "border-b border-border" : ""}`}>
               <div className="w-9 h-9 rounded-xl bg-muted group-hover:bg-white flex items-center justify-center text-base shrink-0 transition">{c.icon}</div>
               <div className="flex-1 min-w-0">
                 <div className="text-[13.5px] font-semibold text-foreground leading-tight group-hover:text-brand transition">{c.name}</div>
                 <div className="text-[11px] text-muted-foreground mt-0.5">{c.count} ads</div>
               </div>
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-muted-foreground group-hover:text-brand group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
@@ -208,8 +208,8 @@ function CategoryList() {
         <div className="relative">
           <div className="text-[11px] font-bold tracking-widest text-brand mb-2">PREMIUM</div>
           <h4 className="font-extrabold text-[17px] leading-tight mb-1.5">Boost your ad to the top</h4>
-          <p className="text-white/70 text-[12px] mb-4 leading-relaxed">Get 5× more views and a verified seller badge. 30-day free trial.</p>
-          <button className="bg-white text-foreground font-bold text-[12.5px] px-4 py-2 rounded-lg hover:bg-brand-soft transition">Upgrade →</button>
+          <p className="text-white/70 text-[12px] mb-4 leading-relaxed">Get more views with a verified seller badge. Coming soon.</p>
+          <Link to="/post-ad" className="inline-block bg-white text-foreground font-bold text-[12.5px] px-4 py-2 rounded-lg hover:bg-brand-soft transition">Post an ad →</Link>
         </div>
       </div>
     </aside>
