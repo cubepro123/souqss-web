@@ -9,15 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ShopsRouteImport } from './routes/shops'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ShopsIdRouteImport } from './routes/shops.$id'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostAdRouteImport } from './routes/_authenticated/post-ad'
+import { Route as AuthenticatedMyShopRouteImport } from './routes/_authenticated/my-shop'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
 
+const ShopsRoute = ShopsRouteImport.update({
+  id: '/shops',
+  path: '/shops',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrowseRoute = BrowseRouteImport.update({
   id: '/browse',
   path: '/browse',
@@ -37,6 +45,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopsIdRoute = ShopsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ShopsRoute,
+} as any)
 const ListingsIdRoute = ListingsIdRouteImport.update({
   id: '/listings/$id',
   path: '/listings/$id',
@@ -52,6 +65,11 @@ const AuthenticatedPostAdRoute = AuthenticatedPostAdRouteImport.update({
   path: '/post-ad',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMyShopRoute = AuthenticatedMyShopRouteImport.update({
+  id: '/my-shop',
+  path: '/my-shop',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
@@ -62,19 +80,25 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
+  '/shops': typeof ShopsRouteWithChildren
   '/favorites': typeof AuthenticatedFavoritesRoute
+  '/my-shop': typeof AuthenticatedMyShopRoute
   '/post-ad': typeof AuthenticatedPostAdRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/shops/$id': typeof ShopsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
+  '/shops': typeof ShopsRouteWithChildren
   '/favorites': typeof AuthenticatedFavoritesRoute
+  '/my-shop': typeof AuthenticatedMyShopRoute
   '/post-ad': typeof AuthenticatedPostAdRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/shops/$id': typeof ShopsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -82,10 +106,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
+  '/shops': typeof ShopsRouteWithChildren
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
+  '/_authenticated/my-shop': typeof AuthenticatedMyShopRoute
   '/_authenticated/post-ad': typeof AuthenticatedPostAdRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/listings/$id': typeof ListingsIdRoute
+  '/shops/$id': typeof ShopsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -93,29 +120,38 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/browse'
+    | '/shops'
     | '/favorites'
+    | '/my-shop'
     | '/post-ad'
     | '/profile'
     | '/listings/$id'
+    | '/shops/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/browse'
+    | '/shops'
     | '/favorites'
+    | '/my-shop'
     | '/post-ad'
     | '/profile'
     | '/listings/$id'
+    | '/shops/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/browse'
+    | '/shops'
     | '/_authenticated/favorites'
+    | '/_authenticated/my-shop'
     | '/_authenticated/post-ad'
     | '/_authenticated/profile'
     | '/listings/$id'
+    | '/shops/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -123,11 +159,19 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
   BrowseRoute: typeof BrowseRoute
+  ShopsRoute: typeof ShopsRouteWithChildren
   ListingsIdRoute: typeof ListingsIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/shops': {
+      id: '/shops'
+      path: '/shops'
+      fullPath: '/shops'
+      preLoaderRoute: typeof ShopsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/browse': {
       id: '/browse'
       path: '/browse'
@@ -156,6 +200,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shops/$id': {
+      id: '/shops/$id'
+      path: '/$id'
+      fullPath: '/shops/$id'
+      preLoaderRoute: typeof ShopsIdRouteImport
+      parentRoute: typeof ShopsRoute
+    }
     '/listings/$id': {
       id: '/listings/$id'
       path: '/listings/$id'
@@ -177,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPostAdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/my-shop': {
+      id: '/_authenticated/my-shop'
+      path: '/my-shop'
+      fullPath: '/my-shop'
+      preLoaderRoute: typeof AuthenticatedMyShopRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/favorites': {
       id: '/_authenticated/favorites'
       path: '/favorites'
@@ -189,12 +247,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
+  AuthenticatedMyShopRoute: typeof AuthenticatedMyShopRoute
   AuthenticatedPostAdRoute: typeof AuthenticatedPostAdRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
+  AuthenticatedMyShopRoute: AuthenticatedMyShopRoute,
   AuthenticatedPostAdRoute: AuthenticatedPostAdRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
 }
@@ -203,13 +263,34 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface ShopsRouteChildren {
+  ShopsIdRoute: typeof ShopsIdRoute
+}
+
+const ShopsRouteChildren: ShopsRouteChildren = {
+  ShopsIdRoute: ShopsIdRoute,
+}
+
+const ShopsRouteWithChildren = ShopsRoute._addFileChildren(ShopsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
   BrowseRoute: BrowseRoute,
+  ShopsRoute: ShopsRouteWithChildren,
   ListingsIdRoute: ListingsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
