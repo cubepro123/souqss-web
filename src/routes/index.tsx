@@ -208,13 +208,45 @@ function CategoryList() {
       <div className="mt-4 relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-[oklch(0.3_0.05_50)] to-[oklch(0.18_0.02_50)] text-white">
         <div className="absolute -top-8 -right-6 w-32 h-32 rounded-full bg-brand/30 blur-2xl" />
         <div className="relative">
-          <div className="text-[11px] font-bold tracking-widest text-brand mb-2">PREMIUM</div>
-          <h4 className="font-extrabold text-[17px] leading-tight mb-1.5">Boost your ad to the top</h4>
-          <p className="text-white/70 text-[12px] mb-4 leading-relaxed">Get more views with a verified seller badge. Coming soon.</p>
-          <Link to="/post-ad" className="inline-block bg-white text-foreground font-bold text-[12.5px] px-4 py-2 rounded-lg hover:bg-brand-soft transition">Post an ad →</Link>
+          <div className="text-[11px] font-bold tracking-widest text-brand mb-2">FOR SELLERS</div>
+          <h4 className="font-extrabold text-[17px] leading-tight mb-1.5">Boost your sales with a shop</h4>
+          <p className="text-white/70 text-[12px] mb-4 leading-relaxed">Create your own storefront and build trust with buyers. Free to set up.</p>
+          <Link to="/my-shop" className="inline-block bg-white text-foreground font-bold text-[12.5px] px-4 py-2 rounded-lg hover:bg-brand-soft transition">Open a shop →</Link>
         </div>
       </div>
     </aside>
+  );
+}
+
+function OpenShopBanner() {
+  const { user } = useAuth();
+  return (
+    <section className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.55_0.16_145)] via-[oklch(0.5_0.14_140)] to-[oklch(0.4_0.12_135)] border border-[oklch(0.55_0.16_145)]/30">
+      <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
+      <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/15 blur-2xl" />
+      <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-[oklch(0.7_0.12_100)]/15 blur-2xl" />
+      <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-5 p-6 sm:p-7">
+        <div className="flex-1">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 text-white/90 text-[11px] font-bold mb-2.5 border border-white/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-[oklch(0.8_0.12_100)] animate-pulse" />
+            NEW
+          </div>
+          <h3 className="text-white text-[20px] sm:text-[24px] font-extrabold leading-tight mb-1.5">
+            Open your online shop on SouqSS
+          </h3>
+          <p className="text-white/75 text-[13.5px] leading-relaxed max-w-[520px]">
+            Sell products or offer services — reach thousands of buyers across South Sudan. It's free to start.
+          </p>
+        </div>
+        <Link
+          to={user ? "/my-shop" : "/auth"}
+          className="shrink-0 bg-white text-[oklch(0.35_0.12_135)] hover:bg-white/95 font-extrabold px-6 py-3 rounded-xl text-[14px] shadow-[0_8px_24px_-6px_rgba(0,0,0,0.25)] transition flex items-center gap-2"
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          {user ? "Open my shop" : "Get started free"}
+        </Link>
+      </div>
+    </section>
   );
 }
 
@@ -242,7 +274,7 @@ function FeaturedShops() {
     <section className="mb-6">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[18px] font-extrabold text-foreground flex items-center gap-2">🏪 Featured Shops</h2>
-        <a className="text-[12.5px] font-bold text-brand cursor-pointer hover:underline">See all →</a>
+        <Link to="/shops" className="text-[12.5px] font-bold text-brand cursor-pointer hover:underline">See all →</Link>
       </div>
       <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
         {SHOPS.map((s) => (
@@ -360,6 +392,7 @@ function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
           <div>
+            <OpenShopBanner />
             <StatBanner />
             <FeaturedShops />
 
