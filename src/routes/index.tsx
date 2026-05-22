@@ -274,7 +274,7 @@ function FeaturedShops() {
     <section className="mb-6">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[18px] font-extrabold text-foreground flex items-center gap-2">🏪 Featured Shops</h2>
-        <a className="text-[12.5px] font-bold text-brand cursor-pointer hover:underline">See all →</a>
+        <Link to="/shops" className="text-[12.5px] font-bold text-brand cursor-pointer hover:underline">See all →</Link>
       </div>
       <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
         {SHOPS.map((s) => (
