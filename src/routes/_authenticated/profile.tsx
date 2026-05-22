@@ -91,6 +91,15 @@ function ProfilePage() {
           </button>
         </section>
 
+        <section className="bg-gradient-to-br from-brand to-brand-dark text-white rounded-3xl p-6 flex items-center gap-4">
+          <div className="text-4xl">🏪</div>
+          <div className="flex-1">
+            <h2 className="text-[18px] font-extrabold">Open your online shop</h2>
+            <p className="text-[13px] opacity-90">Sell products or offer services with a dedicated shop page.</p>
+          </div>
+          <Link to="/my-shop" className="bg-white text-brand-dark font-extrabold px-4 py-2.5 rounded-xl text-[13px] hover:bg-white/90">Open shop →</Link>
+        </section>
+
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-[18px] font-extrabold">My ads ({listings.length})</h2>
