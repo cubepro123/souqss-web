@@ -208,10 +208,10 @@ function CategoryList() {
       <div className="mt-4 relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-[oklch(0.3_0.05_50)] to-[oklch(0.18_0.02_50)] text-white">
         <div className="absolute -top-8 -right-6 w-32 h-32 rounded-full bg-brand/30 blur-2xl" />
         <div className="relative">
-          <div className="text-[11px] font-bold tracking-widest text-brand mb-2">PREMIUM</div>
-          <h4 className="font-extrabold text-[17px] leading-tight mb-1.5">Boost your ad to the top</h4>
-          <p className="text-white/70 text-[12px] mb-4 leading-relaxed">Get more views with a verified seller badge. Coming soon.</p>
-          <Link to="/post-ad" className="inline-block bg-white text-foreground font-bold text-[12.5px] px-4 py-2 rounded-lg hover:bg-brand-soft transition">Post an ad →</Link>
+          <div className="text-[11px] font-bold tracking-widest text-brand mb-2">FOR SELLERS</div>
+          <h4 className="font-extrabold text-[17px] leading-tight mb-1.5">Boost your sales with a shop</h4>
+          <p className="text-white/70 text-[12px] mb-4 leading-relaxed">Create your own storefront and build trust with buyers. Free to set up.</p>
+          <Link to="/my-shop" className="inline-block bg-white text-foreground font-bold text-[12.5px] px-4 py-2 rounded-lg hover:bg-brand-soft transition">Open a shop →</Link>
         </div>
       </div>
     </aside>
