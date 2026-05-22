@@ -59,7 +59,8 @@ function ProfilePage() {
             <img src={logo} alt="SouqSS" className="w-9 h-9 rounded-xl" />
             <span className="text-[20px] font-extrabold"><span className="text-brand">souq</span>SS</span>
           </Link>
-          <button onClick={signOut} className="ml-auto text-[13px] font-bold text-muted-foreground hover:text-foreground">Sign out</button>
+          <Link to="/my-shop" className="ml-auto text-[13px] font-bold text-muted-foreground hover:text-foreground">My shop</Link>
+          <button onClick={signOut} className="text-[13px] font-bold text-muted-foreground hover:text-foreground">Sign out</button>
         </div>
       </header>
 
