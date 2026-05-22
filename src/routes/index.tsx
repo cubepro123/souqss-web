@@ -218,6 +218,38 @@ function CategoryList() {
   );
 }
 
+function OpenShopBanner() {
+  const { user } = useAuth();
+  return (
+    <section className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.55_0.16_145)] via-[oklch(0.5_0.14_140)] to-[oklch(0.4_0.12_135)] border border-[oklch(0.55_0.16_145)]/30">
+      <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
+      <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/15 blur-2xl" />
+      <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-[oklch(0.7_0.12_100)]/15 blur-2xl" />
+      <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-5 p-6 sm:p-7">
+        <div className="flex-1">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 text-white/90 text-[11px] font-bold mb-2.5 border border-white/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-[oklch(0.8_0.12_100)] animate-pulse" />
+            NEW
+          </div>
+          <h3 className="text-white text-[20px] sm:text-[24px] font-extrabold leading-tight mb-1.5">
+            Open your online shop on SouqSS
+          </h3>
+          <p className="text-white/75 text-[13.5px] leading-relaxed max-w-[520px]">
+            Sell products or offer services — reach thousands of buyers across South Sudan. It's free to start.
+          </p>
+        </div>
+        <Link
+          to={user ? "/my-shop" : "/auth"}
+          className="shrink-0 bg-white text-[oklch(0.35_0.12_135)] hover:bg-white/95 font-extrabold px-6 py-3 rounded-xl text-[14px] shadow-[0_8px_24px_-6px_rgba(0,0,0,0.25)] transition flex items-center gap-2"
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          {user ? "Open my shop" : "Get started free"}
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 function StatBanner() {
   const stats = [
     { n: "100k+", l: "Active ads" },
