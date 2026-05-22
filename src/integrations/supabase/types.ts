@@ -121,6 +121,48 @@ export type Database = {
         }
         Relationships: []
       }
+      shops: {
+        Row: {
+          city: string | null
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          phone: string | null
+          service_category: string | null
+          shop_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          service_category?: string | null
+          shop_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          service_category?: string | null
+          shop_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -104,7 +104,9 @@ function Header() {
         </Link>
         <nav className="hidden lg:flex items-center gap-5 text-[14px] font-semibold text-muted-foreground">
           <Link to="/browse" className="hover:text-foreground">Browse</Link>
+          <Link to="/shops" className="hover:text-foreground">Shops</Link>
           {user && <Link to="/favorites" className="hover:text-foreground">♥ Saved</Link>}
+          {user && <Link to="/my-shop" className="hover:text-foreground">My shop</Link>}
           {user && <Link to="/profile" className="hover:text-foreground">My ads</Link>}
         </nav>
         <div className="ml-auto flex items-center gap-3">
