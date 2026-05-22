@@ -392,6 +392,7 @@ function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
           <div>
+            <OpenShopBanner />
             <StatBanner />
             <FeaturedShops />
 
