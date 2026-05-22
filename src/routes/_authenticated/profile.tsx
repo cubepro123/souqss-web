@@ -59,7 +59,8 @@ function ProfilePage() {
             <img src={logo} alt="SouqSS" className="w-9 h-9 rounded-xl" />
             <span className="text-[20px] font-extrabold"><span className="text-brand">souq</span>SS</span>
           </Link>
-          <button onClick={signOut} className="ml-auto text-[13px] font-bold text-muted-foreground hover:text-foreground">Sign out</button>
+          <Link to="/my-shop" className="ml-auto text-[13px] font-bold text-muted-foreground hover:text-foreground">My shop</Link>
+          <button onClick={signOut} className="text-[13px] font-bold text-muted-foreground hover:text-foreground">Sign out</button>
         </div>
       </header>
 
@@ -88,6 +89,15 @@ function ProfilePage() {
           <button disabled={busy} onClick={save} className="mt-5 bg-brand hover:bg-brand-dark disabled:opacity-60 text-white font-bold px-5 py-2.5 rounded-xl text-[14px] transition">
             {busy ? "Saving…" : "Save changes"}
           </button>
+        </section>
+
+        <section className="bg-gradient-to-br from-brand to-brand-dark text-white rounded-3xl p-6 flex items-center gap-4">
+          <div className="text-4xl">🏪</div>
+          <div className="flex-1">
+            <h2 className="text-[18px] font-extrabold">Open your online shop</h2>
+            <p className="text-[13px] opacity-90">Sell products or offer services with a dedicated shop page.</p>
+          </div>
+          <Link to="/my-shop" className="bg-white text-brand-dark font-extrabold px-4 py-2.5 rounded-xl text-[13px] hover:bg-white/90">Open shop →</Link>
         </section>
 
         <section>
