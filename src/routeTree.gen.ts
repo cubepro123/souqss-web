@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShopsRouteImport } from './routes/shops'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -24,6 +26,16 @@ import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authentica
 const ShopsRoute = ShopsRouteImport.update({
   id: '/shops',
   path: '/shops',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrowseRoute = BrowseRouteImport.update({
@@ -80,6 +92,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shops': typeof ShopsRouteWithChildren
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/my-shop': typeof AuthenticatedMyShopRoute
@@ -92,6 +106,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shops': typeof ShopsRouteWithChildren
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/my-shop': typeof AuthenticatedMyShopRoute
@@ -106,6 +122,8 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/shops': typeof ShopsRouteWithChildren
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
   '/_authenticated/my-shop': typeof AuthenticatedMyShopRoute
@@ -120,6 +138,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/browse'
+    | '/forgot-password'
+    | '/reset-password'
     | '/shops'
     | '/favorites'
     | '/my-shop'
@@ -132,6 +152,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/browse'
+    | '/forgot-password'
+    | '/reset-password'
     | '/shops'
     | '/favorites'
     | '/my-shop'
@@ -145,6 +167,8 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/browse'
+    | '/forgot-password'
+    | '/reset-password'
     | '/shops'
     | '/_authenticated/favorites'
     | '/_authenticated/my-shop'
@@ -159,6 +183,8 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
   BrowseRoute: typeof BrowseRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ShopsRoute: typeof ShopsRouteWithChildren
   ListingsIdRoute: typeof ListingsIdRoute
 }
@@ -170,6 +196,20 @@ declare module '@tanstack/react-router' {
       path: '/shops'
       fullPath: '/shops'
       preLoaderRoute: typeof ShopsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/browse': {
@@ -278,6 +318,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
   BrowseRoute: BrowseRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ShopsRoute: ShopsRouteWithChildren,
   ListingsIdRoute: ListingsIdRoute,
 }
