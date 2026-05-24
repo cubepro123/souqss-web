@@ -82,6 +82,16 @@ function ProfilePage() {
           <h1 className="text-[22px] font-extrabold mb-1">My profile</h1>
           <p className="text-[13px] text-muted-foreground mb-5">{user?.email}</p>
 
+          <div className="flex items-center gap-4 mb-5">
+            <div className="w-20 h-20 rounded-full bg-brand-soft overflow-hidden flex items-center justify-center text-2xl font-extrabold text-brand-dark">
+              {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : (profile.display_name || user?.email || "?").charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <label className="text-[12px] font-bold block mb-1">Profile photo</label>
+              <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadAvatar(e.target.files[0])} className="text-[12px]" />
+            </div>
+          </div>
+
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="text-[12px] font-bold block mb-1.5">Display name</label>
