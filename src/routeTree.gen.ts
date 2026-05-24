@@ -18,10 +18,12 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShopsIdRouteImport } from './routes/shops.$id'
 import { Route as ListingsIdRouteImport } from './routes/listings.$id'
+import { Route as AuthConfirmedRouteImport } from './routes/auth.confirmed'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostAdRouteImport } from './routes/_authenticated/post-ad'
 import { Route as AuthenticatedMyShopRouteImport } from './routes/_authenticated/my-shop'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
+import { Route as AuthenticatedEditListingIdRouteImport } from './routes/_authenticated/edit-listing.$id'
 
 const ShopsRoute = ShopsRouteImport.update({
   id: '/shops',
@@ -67,6 +69,11 @@ const ListingsIdRoute = ListingsIdRouteImport.update({
   path: '/listings/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthConfirmedRoute = AuthConfirmedRouteImport.update({
+  id: '/confirmed',
+  path: '/confirmed',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -87,10 +94,16 @@ const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
   path: '/favorites',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedEditListingIdRoute =
+  AuthenticatedEditListingIdRouteImport.update({
+    id: '/edit-listing/$id',
+    path: '/edit-listing/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/browse': typeof BrowseRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -99,12 +112,14 @@ export interface FileRoutesByFullPath {
   '/my-shop': typeof AuthenticatedMyShopRoute
   '/post-ad': typeof AuthenticatedPostAdRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/auth/confirmed': typeof AuthConfirmedRoute
   '/listings/$id': typeof ListingsIdRoute
   '/shops/$id': typeof ShopsIdRoute
+  '/edit-listing/$id': typeof AuthenticatedEditListingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/browse': typeof BrowseRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -113,14 +128,16 @@ export interface FileRoutesByTo {
   '/my-shop': typeof AuthenticatedMyShopRoute
   '/post-ad': typeof AuthenticatedPostAdRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/auth/confirmed': typeof AuthConfirmedRoute
   '/listings/$id': typeof ListingsIdRoute
   '/shops/$id': typeof ShopsIdRoute
+  '/edit-listing/$id': typeof AuthenticatedEditListingIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/browse': typeof BrowseRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -129,8 +146,10 @@ export interface FileRoutesById {
   '/_authenticated/my-shop': typeof AuthenticatedMyShopRoute
   '/_authenticated/post-ad': typeof AuthenticatedPostAdRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/auth/confirmed': typeof AuthConfirmedRoute
   '/listings/$id': typeof ListingsIdRoute
   '/shops/$id': typeof ShopsIdRoute
+  '/_authenticated/edit-listing/$id': typeof AuthenticatedEditListingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -145,8 +164,10 @@ export interface FileRouteTypes {
     | '/my-shop'
     | '/post-ad'
     | '/profile'
+    | '/auth/confirmed'
     | '/listings/$id'
     | '/shops/$id'
+    | '/edit-listing/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -159,8 +180,10 @@ export interface FileRouteTypes {
     | '/my-shop'
     | '/post-ad'
     | '/profile'
+    | '/auth/confirmed'
     | '/listings/$id'
     | '/shops/$id'
+    | '/edit-listing/$id'
   id:
     | '__root__'
     | '/'
@@ -174,14 +197,16 @@ export interface FileRouteTypes {
     | '/_authenticated/my-shop'
     | '/_authenticated/post-ad'
     | '/_authenticated/profile'
+    | '/auth/confirmed'
     | '/listings/$id'
     | '/shops/$id'
+    | '/_authenticated/edit-listing/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   BrowseRoute: typeof BrowseRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -254,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ListingsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/confirmed': {
+      id: '/auth/confirmed'
+      path: '/confirmed'
+      fullPath: '/auth/confirmed'
+      preLoaderRoute: typeof AuthConfirmedRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -282,6 +314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFavoritesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/edit-listing/$id': {
+      id: '/_authenticated/edit-listing/$id'
+      path: '/edit-listing/$id'
+      fullPath: '/edit-listing/$id'
+      preLoaderRoute: typeof AuthenticatedEditListingIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -290,6 +329,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMyShopRoute: typeof AuthenticatedMyShopRoute
   AuthenticatedPostAdRoute: typeof AuthenticatedPostAdRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedEditListingIdRoute: typeof AuthenticatedEditListingIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -297,11 +337,22 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMyShopRoute: AuthenticatedMyShopRoute,
   AuthenticatedPostAdRoute: AuthenticatedPostAdRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedEditListingIdRoute: AuthenticatedEditListingIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
+
+interface AuthRouteChildren {
+  AuthConfirmedRoute: typeof AuthConfirmedRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthConfirmedRoute: AuthConfirmedRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface ShopsRouteChildren {
   ShopsIdRoute: typeof ShopsIdRoute
@@ -316,7 +367,7 @@ const ShopsRouteWithChildren = ShopsRoute._addFileChildren(ShopsRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   BrowseRoute: BrowseRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
