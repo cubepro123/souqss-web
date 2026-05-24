@@ -17,17 +17,31 @@ type Shop = {
   city: string | null; logo_url: string | null;
 };
 
+const PAGE_SIZE = 24;
+
 function ShopsPage() {
   const [type, setType] = useState<"all" | "seller" | "service_provider">("all");
   const [shops, setShops] = useState<Shop[]>([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => { setPage(0); }, [type]);
 
   useEffect(() => {
     setLoading(true);
-    let q = supabase.from("shops").select("id,name,description,shop_type,service_category,city,logo_url").order("created_at", { ascending: false });
+    let q = supabase.from("shops")
+      .select("id,name,description,shop_type,service_category,city,logo_url")
+      .order("created_at", { ascending: false })
+      .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
     if (type !== "all") q = q.eq("shop_type", type);
-    q.then(({ data }) => { setShops(data || []); setLoading(false); });
-  }, [type]);
+    q.then(({ data }) => {
+      const rows = (data || []) as Shop[];
+      setShops((prev) => page === 0 ? rows : [...prev, ...rows]);
+      setHasMore(rows.length === PAGE_SIZE);
+      setLoading(false);
+    });
+  }, [type, page]);
 
   return (
     <div className="min-h-screen bg-background">
