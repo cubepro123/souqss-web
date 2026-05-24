@@ -153,9 +153,14 @@ function ListingDetail() {
                 </button>
 
                 {user?.id === l.user_id && (
-                  <button onClick={remove} className="w-full mt-2 py-2.5 rounded-xl font-bold text-[13px] text-destructive border-2 border-destructive/30 hover:bg-destructive/5 transition">
-                    Delete my ad
-                  </button>
+                  <>
+                    <Link to="/edit-listing/$id" params={{ id: l.id }} className="block text-center w-full mt-2 py-2.5 rounded-xl font-bold text-[13px] text-brand border-2 border-brand/30 hover:bg-brand-soft transition">
+                      Edit my ad
+                    </Link>
+                    <button onClick={remove} className="w-full mt-2 py-2.5 rounded-xl font-bold text-[13px] text-destructive border-2 border-destructive/30 hover:bg-destructive/5 transition">
+                      Delete my ad
+                    </button>
+                  </>
                 )}
               </div>
 
