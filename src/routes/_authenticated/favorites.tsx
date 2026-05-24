@@ -11,19 +11,30 @@ export const Route = createFileRoute("/_authenticated/favorites")({
 
 type Row = { listing_id: string; listings: { id: string; title: string; price: number | null; currency: string; city: string | null; category: string; images: string[] } | null };
 
+const PAGE_SIZE = 24;
+
 function Favorites() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
+    setLoading(true);
     supabase.from("favorites")
       .select("listing_id, listings(id,title,price,currency,city,category,images)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .then(({ data }) => { setRows((data as any) || []); setLoading(false); });
-  }, [user]);
+      .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
+      .then(({ data }) => {
+        const next = (data as any) || [];
+        setRows((prev) => page === 0 ? next : [...prev, ...next]);
+        setHasMore(next.length === PAGE_SIZE);
+        setLoading(false);
+      });
+  }, [user, page]);
 
   const remove = async (listingId: string) => {
     if (!user) return;
@@ -75,6 +86,13 @@ function Favorites() {
                 </div>
               );
             })}
+          </div>
+        )}
+        {hasMore && rows.length > 0 && (
+          <div className="text-center mt-8">
+            <button disabled={loading} onClick={() => setPage((p) => p + 1)} className="bg-card border-2 border-border hover:border-brand hover:text-brand disabled:opacity-50 font-bold px-8 py-3 rounded-xl text-[14px] transition">
+              {loading ? "Loading…" : "Load more →"}
+            </button>
           </div>
         )}
       </main>

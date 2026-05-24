@@ -35,9 +35,22 @@ function ProfilePage() {
       display_name: profile.display_name?.slice(0, 60) || null,
       phone: profile.phone?.slice(0, 30) || null,
       city: profile.city?.slice(0, 60) || null,
+      avatar_url: profile.avatar_url || null,
     }).eq("id", user.id);
     setBusy(false);
     setMsg(error ? error.message : "Saved ✓");
+  };
+
+  const uploadAvatar = async (f: File) => {
+    if (!user) return;
+    setBusy(true);
+    const path = `${user.id}/avatar-${Date.now()}-${f.name}`;
+    const { error } = await supabase.storage.from("listing-images").upload(path, f, { upsert: true });
+    if (!error) {
+      const { data: { publicUrl } } = supabase.storage.from("listing-images").getPublicUrl(path);
+      setProfile((p) => ({ ...p, avatar_url: publicUrl }));
+    }
+    setBusy(false);
   };
 
   const signOut = async () => {
@@ -68,6 +81,16 @@ function ProfilePage() {
         <section className="bg-card rounded-3xl border border-border p-6">
           <h1 className="text-[22px] font-extrabold mb-1">My profile</h1>
           <p className="text-[13px] text-muted-foreground mb-5">{user?.email}</p>
+
+          <div className="flex items-center gap-4 mb-5">
+            <div className="w-20 h-20 rounded-full bg-brand-soft overflow-hidden flex items-center justify-center text-2xl font-extrabold text-brand-dark">
+              {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : (profile.display_name || user?.email || "?").charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <label className="text-[12px] font-bold block mb-1">Profile photo</label>
+              <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadAvatar(e.target.files[0])} className="text-[12px]" />
+            </div>
+          </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
@@ -121,7 +144,10 @@ function ProfilePage() {
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-[14px] line-clamp-2">{l.title}</div>
                     <div className="text-price font-extrabold text-[13px] mt-1">{l.currency} {l.price?.toLocaleString() ?? "—"}</div>
-                    <button onClick={() => deleteListing(l.id)} className="text-[11.5px] text-muted-foreground hover:text-brand font-semibold mt-1">Delete</button>
+                    <div className="flex gap-3 mt-1">
+                      <Link to="/edit-listing/$id" params={{ id: l.id }} className="text-[11.5px] text-brand hover:text-brand-dark font-semibold">Edit</Link>
+                      <button onClick={() => deleteListing(l.id)} className="text-[11.5px] text-muted-foreground hover:text-destructive font-semibold">Delete</button>
+                    </div>
                   </div>
                 </div>
               ))}

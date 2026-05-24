@@ -6,7 +6,32 @@ import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/listings/$id")({
   component: ListingDetail,
-  head: () => ({ meta: [{ title: "Listing — SouqSS" }] }),
+  loader: async ({ params }) => {
+    const { data } = await supabase
+      .from("listings")
+      .select("title,description,images,price,currency,city")
+      .eq("id", params.id)
+      .maybeSingle();
+    return { meta: data };
+  },
+  head: ({ loaderData, params }) => {
+    const m = loaderData?.meta;
+    const title = m ? `${m.title} — SouqSS` : "Listing — SouqSS";
+    const desc = m?.description?.slice(0, 160) || `Listing on SouqSS${m?.city ? ` in ${m.city}` : ""}.`;
+    const img = m?.images?.[0];
+    const url = `https://id-preview--fe57f89b-b050-4a85-9fd1-816a3abb1d39.lovable.app/listings/${params.id}`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: desc },
+        { property: "og:title", content: title },
+        { property: "og:description", content: desc },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "product" },
+        ...(img ? [{ property: "og:image", content: img }] : []),
+      ],
+    };
+  },
 });
 
 type Listing = {
@@ -128,9 +153,14 @@ function ListingDetail() {
                 </button>
 
                 {user?.id === l.user_id && (
-                  <button onClick={remove} className="w-full mt-2 py-2.5 rounded-xl font-bold text-[13px] text-destructive border-2 border-destructive/30 hover:bg-destructive/5 transition">
-                    Delete my ad
-                  </button>
+                  <>
+                    <Link to="/edit-listing/$id" params={{ id: l.id }} className="block text-center w-full mt-2 py-2.5 rounded-xl font-bold text-[13px] text-brand border-2 border-brand/30 hover:bg-brand-soft transition">
+                      Edit my ad
+                    </Link>
+                    <button onClick={remove} className="w-full mt-2 py-2.5 rounded-xl font-bold text-[13px] text-destructive border-2 border-destructive/30 hover:bg-destructive/5 transition">
+                      Delete my ad
+                    </button>
+                  </>
                 )}
               </div>
 

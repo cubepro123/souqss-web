@@ -16,6 +16,19 @@ function AuthPage() {
   const [displayName, setDisplayName] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+
+  const resend = async () => {
+    if (!pendingEmail) return;
+    setBusy(true); setErr(null);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: pendingEmail,
+      options: { emailRedirectTo: `${window.location.origin}/auth/confirmed` },
+    });
+    setBusy(false);
+    setErr(error ? error.message : "Confirmation email sent again ✓");
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -27,11 +40,12 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/auth/confirmed`,
             data: { display_name: displayName || email.split("@")[0] },
           },
         });
         if (error) throw error;
+        setPendingEmail(email);
         setErr("Check your inbox to confirm your email, then sign in.");
         setMode("signin");
       } else {
@@ -93,6 +107,12 @@ function AuthPage() {
             <button disabled={busy} type="submit" className="w-full bg-brand hover:bg-brand-dark disabled:opacity-60 text-white font-bold py-3 rounded-xl text-[14px] transition shadow-[0_4px_14px_oklch(0.64_0.18_38_/_0.35)]">
               {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
             </button>
+
+            {pendingEmail && mode === "signin" && (
+              <button type="button" disabled={busy} onClick={resend} className="w-full text-[12.5px] font-bold text-brand hover:text-brand-dark py-2">
+                Resend confirmation email to {pendingEmail}
+              </button>
+            )}
           </form>
         </div>
 
