@@ -144,7 +144,10 @@ function ProfilePage() {
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-[14px] line-clamp-2">{l.title}</div>
                     <div className="text-price font-extrabold text-[13px] mt-1">{l.currency} {l.price?.toLocaleString() ?? "—"}</div>
-                    <button onClick={() => deleteListing(l.id)} className="text-[11.5px] text-muted-foreground hover:text-brand font-semibold mt-1">Delete</button>
+                    <div className="flex gap-3 mt-1">
+                      <Link to="/edit-listing/$id" params={{ id: l.id }} className="text-[11.5px] text-brand hover:text-brand-dark font-semibold">Edit</Link>
+                      <button onClick={() => deleteListing(l.id)} className="text-[11.5px] text-muted-foreground hover:text-destructive font-semibold">Delete</button>
+                    </div>
                   </div>
                 </div>
               ))}
