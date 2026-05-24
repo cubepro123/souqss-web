@@ -107,6 +107,12 @@ function AuthPage() {
             <button disabled={busy} type="submit" className="w-full bg-brand hover:bg-brand-dark disabled:opacity-60 text-white font-bold py-3 rounded-xl text-[14px] transition shadow-[0_4px_14px_oklch(0.64_0.18_38_/_0.35)]">
               {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
             </button>
+
+            {pendingEmail && mode === "signin" && (
+              <button type="button" disabled={busy} onClick={resend} className="w-full text-[12.5px] font-bold text-brand hover:text-brand-dark py-2">
+                Resend confirmation email to {pendingEmail}
+              </button>
+            )}
           </form>
         </div>
 
