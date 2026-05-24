@@ -112,24 +112,40 @@ function ShopDetailPage() {
 
         {!isService && (
           <section>
-            <h2 className="text-[18px] font-extrabold mb-3">Items from this shop ({listings.length})</h2>
-            {listings.length === 0 ? (
-              <div className="text-[13.5px] text-muted-foreground bg-card border border-dashed border-border rounded-2xl p-8 text-center">No items yet.</div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {listings.map((l) => (
-                  <Link key={l.id} to="/listings/$id" params={{ id: l.id }} className="bg-card border border-border hover:border-brand rounded-2xl overflow-hidden transition">
-                    <div className="aspect-square bg-muted">
-                      {l.images?.[0] ? <img src={l.images[0]} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>}
-                    </div>
-                    <div className="p-2.5">
-                      <div className="font-bold text-[13px] line-clamp-2">{l.title}</div>
-                      <div className="text-price font-extrabold text-[13px] mt-1">{l.currency} {l.price?.toLocaleString() ?? "—"}</div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+              <h2 className="text-[18px] font-extrabold">Items from this shop ({listings.length})</h2>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search in this shop…"
+                className="px-3 py-2 rounded-xl border-2 border-border focus:border-brand outline-none text-[13px] bg-background w-full sm:w-64"
+              />
+            </div>
+            {(() => {
+              const filtered = query
+                ? listings.filter((l) => l.title.toLowerCase().includes(query.toLowerCase()))
+                : listings;
+              if (filtered.length === 0) return (
+                <div className="text-[13.5px] text-muted-foreground bg-card border border-dashed border-border rounded-2xl p-8 text-center">
+                  {query ? "No items match your search." : "No items yet."}
+                </div>
+              );
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {filtered.map((l) => (
+                    <Link key={l.id} to="/listings/$id" params={{ id: l.id }} className="bg-card border border-border hover:border-brand rounded-2xl overflow-hidden transition">
+                      <div className="aspect-square bg-muted">
+                        {l.images?.[0] ? <img src={l.images[0]} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>}
+                      </div>
+                      <div className="p-2.5">
+                        <div className="font-bold text-[13px] line-clamp-2">{l.title}</div>
+                        <div className="text-price font-extrabold text-[13px] mt-1">{l.currency} {l.price?.toLocaleString() ?? "—"}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              );
+            })()}
           </section>
         )}
       </main>
