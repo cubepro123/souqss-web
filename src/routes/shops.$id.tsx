@@ -54,7 +54,7 @@ function ShopDetailPage() {
         const { data: ls } = await supabase.from("listings")
           .select("id,title,price,currency,images")
           .eq("user_id", data.user_id).eq("status", "active")
-          .order("created_at", { ascending: false }).limit(24);
+          .order("created_at", { ascending: false }).limit(200);
         setListings(ls || []);
       }
       setLoading(false);
