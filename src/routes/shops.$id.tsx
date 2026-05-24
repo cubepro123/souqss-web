@@ -44,6 +44,7 @@ function ShopDetailPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPhone, setShowPhone] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     setLoading(true);
