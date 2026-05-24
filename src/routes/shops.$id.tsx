@@ -5,6 +5,30 @@ import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/shops/$id")({
   component: ShopDetailPage,
+  loader: async ({ params }) => {
+    const { data } = await supabase
+      .from("shops")
+      .select("name,description,logo_url,city,shop_type,service_category")
+      .eq("id", params.id)
+      .maybeSingle();
+    return { meta: data };
+  },
+  head: ({ loaderData, params }) => {
+    const m = loaderData?.meta;
+    const title = m ? `${m.name} — SouqSS` : "Shop — SouqSS";
+    const desc = m?.description?.slice(0, 160) || (m?.shop_type === "service_provider" ? `${m?.service_category || "Service"} provider on SouqSS.` : "Shop on SouqSS.");
+    const url = `https://id-preview--fe57f89b-b050-4a85-9fd1-816a3abb1d39.lovable.app/shops/${params.id}`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: desc },
+        { property: "og:title", content: title },
+        { property: "og:description", content: desc },
+        { property: "og:url", content: url },
+        ...(m?.logo_url ? [{ property: "og:image", content: m.logo_url }] : []),
+      ],
+    };
+  },
 });
 
 type Shop = {
