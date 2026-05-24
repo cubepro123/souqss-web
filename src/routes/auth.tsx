@@ -16,6 +16,19 @@ function AuthPage() {
   const [displayName, setDisplayName] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+
+  const resend = async () => {
+    if (!pendingEmail) return;
+    setBusy(true); setErr(null);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: pendingEmail,
+      options: { emailRedirectTo: `${window.location.origin}/auth/confirmed` },
+    });
+    setBusy(false);
+    setErr(error ? error.message : "Confirmation email sent again ✓");
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -27,11 +40,12 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/auth/confirmed`,
             data: { display_name: displayName || email.split("@")[0] },
           },
         });
         if (error) throw error;
+        setPendingEmail(email);
         setErr("Check your inbox to confirm your email, then sign in.");
         setMode("signin");
       } else {
