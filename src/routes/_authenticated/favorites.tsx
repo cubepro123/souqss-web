@@ -88,6 +88,13 @@ function Favorites() {
             })}
           </div>
         )}
+        {hasMore && rows.length > 0 && (
+          <div className="text-center mt-8">
+            <button disabled={loading} onClick={() => setPage((p) => p + 1)} className="bg-card border-2 border-border hover:border-brand hover:text-brand disabled:opacity-50 font-bold px-8 py-3 rounded-xl text-[14px] transition">
+              {loading ? "Loading…" : "Load more →"}
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );
