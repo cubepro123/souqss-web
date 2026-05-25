@@ -93,6 +93,25 @@ const SHOPS = [
 
 function Header() {
   const { user } = useAuth();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!user) { setUnread(0); return; }
+    let active = true;
+    const load = async () => {
+      const { data: convs } = await supabase.from("conversations").select("id").or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
+      const ids = convs?.map(c => c.id) ?? [];
+      if (ids.length === 0) { if (active) setUnread(0); return; }
+      const { count } = await supabase.from("messages").select("id", { count: "exact", head: true }).in("conversation_id", ids).neq("sender_id", user.id).is("read_at", null);
+      if (active) setUnread(count ?? 0);
+    };
+    load();
+    const ch = supabase.channel(`inbox-badge:${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, load)
+      .subscribe();
+    return () => { active = false; supabase.removeChannel(ch); };
+  }, [user]);
+
   return (
     <header className="bg-card border-b border-border sticky top-0 z-30">
       <div className="max-w-[1280px] mx-auto px-4 h-16 flex items-center gap-6">
@@ -106,6 +125,11 @@ function Header() {
           <Link to="/browse" className="hover:text-foreground">Browse</Link>
           <Link to="/shops" className="hover:text-foreground">Shops</Link>
           {user && <Link to="/favorites" className="hover:text-foreground">♥ Saved</Link>}
+          {user && (
+            <Link to="/inbox" className="hover:text-foreground inline-flex items-center gap-1.5">
+              💬 Inbox{unread > 0 && <span className="text-[11px] font-bold bg-brand text-white rounded-full px-1.5 min-w-[18px] text-center">{unread}</span>}
+            </Link>
+          )}
           {user && <Link to="/my-shop" className="hover:text-foreground">My shop</Link>}
           {user && <Link to="/profile" className="hover:text-foreground">My ads</Link>}
         </nav>
