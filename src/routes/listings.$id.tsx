@@ -87,6 +87,25 @@ function ListingDetail() {
     navigate({ to: "/profile" });
   };
 
+  const messageSeller = async () => {
+    if (!l) return;
+    if (!user) { navigate({ to: "/auth" }); return; }
+    if (user.id === l.user_id) return;
+    const { data: existing } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("listing_id", l.id)
+      .eq("buyer_id", user.id)
+      .maybeSingle();
+    if (existing) { navigate({ to: "/inbox/$id", params: { id: existing.id } }); return; }
+    const { data: created, error } = await supabase
+      .from("conversations")
+      .insert({ listing_id: l.id, buyer_id: user.id, seller_id: l.user_id })
+      .select("id")
+      .single();
+    if (!error && created) navigate({ to: "/inbox/$id", params: { id: created.id } });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b border-border sticky top-0 z-30">
