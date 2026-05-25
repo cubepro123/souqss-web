@@ -22,7 +22,9 @@ import { Route as AuthConfirmedRouteImport } from './routes/auth.confirmed'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPostAdRouteImport } from './routes/_authenticated/post-ad'
 import { Route as AuthenticatedMyShopRouteImport } from './routes/_authenticated/my-shop'
+import { Route as AuthenticatedInboxRouteImport } from './routes/_authenticated/inbox'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
+import { Route as AuthenticatedInboxIdRouteImport } from './routes/_authenticated/inbox.$id'
 import { Route as AuthenticatedEditListingIdRouteImport } from './routes/_authenticated/edit-listing.$id'
 
 const ShopsRoute = ShopsRouteImport.update({
@@ -89,10 +91,20 @@ const AuthenticatedMyShopRoute = AuthenticatedMyShopRouteImport.update({
   path: '/my-shop',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedInboxRoute = AuthenticatedInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedInboxIdRoute = AuthenticatedInboxIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedInboxRoute,
 } as any)
 const AuthenticatedEditListingIdRoute =
   AuthenticatedEditListingIdRouteImport.update({
@@ -109,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/shops': typeof ShopsRouteWithChildren
   '/favorites': typeof AuthenticatedFavoritesRoute
+  '/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/my-shop': typeof AuthenticatedMyShopRoute
   '/post-ad': typeof AuthenticatedPostAdRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -116,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/listings/$id': typeof ListingsIdRoute
   '/shops/$id': typeof ShopsIdRoute
   '/edit-listing/$id': typeof AuthenticatedEditListingIdRoute
+  '/inbox/$id': typeof AuthenticatedInboxIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -125,6 +139,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/shops': typeof ShopsRouteWithChildren
   '/favorites': typeof AuthenticatedFavoritesRoute
+  '/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/my-shop': typeof AuthenticatedMyShopRoute
   '/post-ad': typeof AuthenticatedPostAdRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -132,6 +147,7 @@ export interface FileRoutesByTo {
   '/listings/$id': typeof ListingsIdRoute
   '/shops/$id': typeof ShopsIdRoute
   '/edit-listing/$id': typeof AuthenticatedEditListingIdRoute
+  '/inbox/$id': typeof AuthenticatedInboxIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +159,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/shops': typeof ShopsRouteWithChildren
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
+  '/_authenticated/inbox': typeof AuthenticatedInboxRouteWithChildren
   '/_authenticated/my-shop': typeof AuthenticatedMyShopRoute
   '/_authenticated/post-ad': typeof AuthenticatedPostAdRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -150,6 +167,7 @@ export interface FileRoutesById {
   '/listings/$id': typeof ListingsIdRoute
   '/shops/$id': typeof ShopsIdRoute
   '/_authenticated/edit-listing/$id': typeof AuthenticatedEditListingIdRoute
+  '/_authenticated/inbox/$id': typeof AuthenticatedInboxIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +179,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/shops'
     | '/favorites'
+    | '/inbox'
     | '/my-shop'
     | '/post-ad'
     | '/profile'
@@ -168,6 +187,7 @@ export interface FileRouteTypes {
     | '/listings/$id'
     | '/shops/$id'
     | '/edit-listing/$id'
+    | '/inbox/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +197,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/shops'
     | '/favorites'
+    | '/inbox'
     | '/my-shop'
     | '/post-ad'
     | '/profile'
@@ -184,6 +205,7 @@ export interface FileRouteTypes {
     | '/listings/$id'
     | '/shops/$id'
     | '/edit-listing/$id'
+    | '/inbox/$id'
   id:
     | '__root__'
     | '/'
@@ -194,6 +216,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/shops'
     | '/_authenticated/favorites'
+    | '/_authenticated/inbox'
     | '/_authenticated/my-shop'
     | '/_authenticated/post-ad'
     | '/_authenticated/profile'
@@ -201,6 +224,7 @@ export interface FileRouteTypes {
     | '/listings/$id'
     | '/shops/$id'
     | '/_authenticated/edit-listing/$id'
+    | '/_authenticated/inbox/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -307,12 +331,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMyShopRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/inbox': {
+      id: '/_authenticated/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AuthenticatedInboxRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/favorites': {
       id: '/_authenticated/favorites'
       path: '/favorites'
       fullPath: '/favorites'
       preLoaderRoute: typeof AuthenticatedFavoritesRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/inbox/$id': {
+      id: '/_authenticated/inbox/$id'
+      path: '/$id'
+      fullPath: '/inbox/$id'
+      preLoaderRoute: typeof AuthenticatedInboxIdRouteImport
+      parentRoute: typeof AuthenticatedInboxRoute
     }
     '/_authenticated/edit-listing/$id': {
       id: '/_authenticated/edit-listing/$id'
@@ -324,8 +362,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedInboxRouteChildren {
+  AuthenticatedInboxIdRoute: typeof AuthenticatedInboxIdRoute
+}
+
+const AuthenticatedInboxRouteChildren: AuthenticatedInboxRouteChildren = {
+  AuthenticatedInboxIdRoute: AuthenticatedInboxIdRoute,
+}
+
+const AuthenticatedInboxRouteWithChildren =
+  AuthenticatedInboxRoute._addFileChildren(AuthenticatedInboxRouteChildren)
+
 interface AuthenticatedRouteChildren {
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
+  AuthenticatedInboxRoute: typeof AuthenticatedInboxRouteWithChildren
   AuthenticatedMyShopRoute: typeof AuthenticatedMyShopRoute
   AuthenticatedPostAdRoute: typeof AuthenticatedPostAdRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -334,6 +384,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
+  AuthenticatedInboxRoute: AuthenticatedInboxRouteWithChildren,
   AuthenticatedMyShopRoute: AuthenticatedMyShopRoute,
   AuthenticatedPostAdRoute: AuthenticatedPostAdRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,

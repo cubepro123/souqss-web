@@ -87,6 +87,25 @@ function ListingDetail() {
     navigate({ to: "/profile" });
   };
 
+  const messageSeller = async () => {
+    if (!l) return;
+    if (!user) { navigate({ to: "/auth" }); return; }
+    if (user.id === l.user_id) return;
+    const { data: existing } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("listing_id", l.id)
+      .eq("buyer_id", user.id)
+      .maybeSingle();
+    if (existing) { navigate({ to: "/inbox/$id", params: { id: existing.id } }); return; }
+    const { data: created, error } = await supabase
+      .from("conversations")
+      .insert({ listing_id: l.id, buyer_id: user.id, seller_id: l.user_id })
+      .select("id")
+      .single();
+    if (!error && created) navigate({ to: "/inbox/$id", params: { id: created.id } });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b border-border sticky top-0 z-30">
@@ -176,9 +195,15 @@ function ListingDetail() {
                   </div>
                 </div>
 
+                {user?.id !== l.user_id && (
+                  <button onClick={messageSeller} className="w-full mt-4 bg-brand hover:bg-brand-dark text-white font-bold py-3 rounded-xl text-[14px] transition">
+                    💬 Message seller
+                  </button>
+                )}
+
                 {seller?.phone ? (
                   <>
-                    <button onClick={() => setShowPhone(true)} className="w-full mt-4 bg-brand hover:bg-brand-dark text-white font-bold py-3 rounded-xl text-[14px] transition">
+                    <button onClick={() => setShowPhone(true)} className={`w-full ${user?.id !== l.user_id ? "mt-2 border-2 border-brand text-brand-dark hover:bg-brand-soft" : "mt-4 bg-brand hover:bg-brand-dark text-white"} font-bold py-3 rounded-xl text-[14px] transition`}>
                       {showPhone ? `📞 ${seller.phone}` : "Show phone number"}
                     </button>
                     {showPhone && (
