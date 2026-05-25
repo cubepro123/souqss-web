@@ -195,9 +195,15 @@ function ListingDetail() {
                   </div>
                 </div>
 
+                {user?.id !== l.user_id && (
+                  <button onClick={messageSeller} className="w-full mt-4 bg-brand hover:bg-brand-dark text-white font-bold py-3 rounded-xl text-[14px] transition">
+                    💬 Message seller
+                  </button>
+                )}
+
                 {seller?.phone ? (
                   <>
-                    <button onClick={() => setShowPhone(true)} className="w-full mt-4 bg-brand hover:bg-brand-dark text-white font-bold py-3 rounded-xl text-[14px] transition">
+                    <button onClick={() => setShowPhone(true)} className={`w-full ${user?.id !== l.user_id ? "mt-2 border-2 border-brand text-brand-dark hover:bg-brand-soft" : "mt-4 bg-brand hover:bg-brand-dark text-white"} font-bold py-3 rounded-xl text-[14px] transition`}>
                       {showPhone ? `📞 ${seller.phone}` : "Show phone number"}
                     </button>
                     {showPhone && (
