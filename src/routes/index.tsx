@@ -1,471 +1,544 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
-import logoImg from "@/assets/logo.png";
+import { createFileRoute } from '@tanstack/react-router';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
+import type { Listing } from '@/lib/types';
+import { AuthModal } from '@/components/AuthModal';
+import { ListingModal } from '@/components/ListingModal';
+import { PostAdModal } from '@/components/PostAdModal';
+import { useToast, Toast } from '@/components/Toast';
 
-type DbListing = {
-  id: string;
-  title: string;
-  price: number | null;
-  currency: string;
-  city: string | null;
-  category: string;
-  condition: string | null;
-  images: string[];
-  created_at: string;
-};
-
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute('/')(({
   component: Home,
   head: () => ({
     meta: [
-      { title: "SouqSS — Sell Faster, Buy Smarter in South Sudan" },
-      { name: "description", content: "South Sudan's #1 marketplace. Buy and sell phones, cars, property, fashion, jobs and services across Juba and beyond." },
-      { property: "og:title", content: "SouqSS — South Sudan's Marketplace" },
-      { property: "og:description", content: "Sell faster, buy smarter. South Sudan's largest classifieds marketplace." },
+      { title: 'SouqSS — Buy & Sell in South Sudan' },
+      { name: 'description', content: "South Sudan's #1 marketplace. Buy and sell phones, cars, property, fashion and more across Juba and beyond." },
     ],
     links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" },
+      { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+      { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
+      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap' },
     ],
   }),
-});
+}));
 
 const CATEGORIES = [
-  { name: "Shops", count: "1,240", icon: "🏪" },
-  { name: "For Sale", count: "18,930", icon: "🛍️" },
-  { name: "Services", count: "4,302", icon: "🔧" },
-  { name: "Real Estate", count: "4,886", icon: "🏠" },
-  { name: "Electronics", count: "6,072", icon: "💻" },
-  { name: "Vehicles", count: "12,837", icon: "🚗" },
-  { name: "Jobs", count: "2,431", icon: "💼" },
-  { name: "Food", count: "3,646", icon: "🍽️" },
-  { name: "Pets", count: "612", icon: "🐾" },
-  { name: "Fashion", count: "6,629", icon: "👗" },
-  { name: "Home & Furniture", count: "7,045", icon: "🛋️" },
-  { name: "Beauty & Care", count: "2,850", icon: "💄" },
-  { name: "Babies & Kids", count: "1,857", icon: "🧸" },
-  { name: "Farming", count: "1,420", icon: "🌾" },
+  { name: 'All', icon: '🌍' },
+  { name: 'Real Estate', icon: '🏠', count: '4.8k' },
+  { name: 'Electronics', icon: '💻', count: '6.0k' },
+  { name: 'Vehicles', icon: '🚗', count: '12.8k' },
+  { name: 'Fashion', icon: '👗', count: '6.6k' },
+  { name: 'Home & Furniture', icon: '🛋️', count: '7.0k' },
+  { name: 'Jobs', icon: '💼', count: '2.4k' },
+  { name: 'Services', icon: '🔧', count: '3.1k' },
+  { name: 'Food & Groceries', icon: '🍽️', count: '3.6k' },
+  { name: 'Pets', icon: '🐾', count: '612' },
+  { name: 'Beauty & Care', icon: '💄', count: '2.8k' },
+  { name: 'Industrial', icon: '⚙️', count: '1.9k' },
 ];
 
+const QUICK_CHIPS = ['📱 iPhone', '🚗 Toyota', '🏠 Apartment', '☀️ Solar Panel', '⚡ Generator', '💻 MacBook'];
 
-const QUICK_CHIPS = ["iPhone", "Toyota Hilux", "Apartment Juba", "Solar panel", "Generator", "Office desks"];
+const PAGE_SIZE = 12;
 
-const CITIES = ["All South Sudan", "Juba", "Wau", "Malakal", "Yei", "Aweil", "Bor", "Rumbek"];
-
-type Ad = {
-  title: string;
-  price: string;
-  location: string;
-  emoji: string;
-  bg: string;
-  verified?: boolean;
-  premium?: boolean;
-  badge?: string;
-  condition?: string;
-};
-
-const ADS: Ad[] = [
-  { title: "iPhone 14 Pro Max 256GB — sealed in box", price: "SSP 1,250,000", location: "Juba, Hai Cinema", emoji: "📱", bg: "bg-[#FDE8DF]", verified: true, premium: true, condition: "Brand New" },
-  { title: "Toyota Hilux 2018 Double Cabin, low mileage", price: "SSP 38,000,000", location: "Juba, Tongping", emoji: "🚙", bg: "bg-[#DCE9FA]", verified: true, badge: "Top Seller", condition: "Used" },
-  { title: "3-Bedroom apartment fully furnished, Hai Malakal", price: "SSP 450,000/mo", location: "Juba, Hai Malakal", emoji: "🏘️", bg: "bg-[#DDF2E8]", verified: true, condition: "Long Term" },
-  { title: "BMW 1 Series F20 Front Shock Mount — OEM", price: "SSP 53,000", location: "Juba, Industrial Area", emoji: "🔩", bg: "bg-[#EDE2FA]", premium: true, condition: "Brand New" },
-  { title: "MacBook Pro M2 16-inch with AppleCare+", price: "SSP 2,400,000", location: "Juba, Thongping", emoji: "💻", bg: "bg-[#FEF3D2]", verified: true, condition: "Like New" },
-  { title: "Solar Panel 450W Mono + free installation", price: "SSP 320,000", location: "Greater Juba", emoji: "☀️", bg: "bg-[#FEF3D2]", premium: true, badge: "Eco", condition: "Brand New" },
-  { title: "Traditional wedding dress — custom tailoring", price: "SSP 85,000", location: "Juba, Konyo Konyo", emoji: "👗", bg: "bg-[#EDE2FA]", condition: "Made to order" },
-  { title: "Fresh Yei mangoes 50kg crate, farm direct", price: "SSP 28,000", location: "Yei → Juba", emoji: "🥭", bg: "bg-[#FEF3D2]", verified: true, condition: "Fresh" },
-  { title: "L-shape leather sofa set, 7-seater", price: "SSP 320,000", location: "Juba, Munuki", emoji: "🛋️", bg: "bg-[#FDE8DF]", condition: "Used" },
-  { title: "Honda CG 125 boda boda, excellent condition", price: "SSP 1,800,000", location: "Juba, Jebel", emoji: "🏍️", bg: "bg-[#DCE9FA]", verified: true, condition: "Used" },
-  { title: "Generator 5KVA Honda silent series", price: "SSP 980,000", location: "Juba, Custom Market", emoji: "🔌", bg: "bg-[#DDF2E8]", premium: true, condition: "Brand New" },
-  { title: "Office desks bulk lot (10 pieces) — wood", price: "SSP 420,000", location: "Juba, Tongping", emoji: "🪑", bg: "bg-[#FDE8DF]", condition: "Used" },
-];
-
-const SHOPS = [
-  { name: "Nile Electronics", cat: "Phones & Tablets", logo: "📱", color: "from-[#D4522B] to-[#E8754D]" },
-  { name: "Juba Motors", cat: "Vehicles", logo: "🚗", color: "from-[#2B7A4B] to-[#3AA368]" },
-  { name: "Mama Akon Fashion", cat: "Fashion", logo: "👗", color: "from-[#C9920A] to-[#E8B23A]" },
-  { name: "Equatoria Builders", cat: "Services", logo: "🔧", color: "from-[#1C3BAA] to-[#3B5BD9]" },
-  { name: "Green Farm SS", cat: "Food & Farming", logo: "🥬", color: "from-[#2B7A4B] to-[#5BB87A]" },
-  { name: "Konyo Konyo Mart", cat: "General", logo: "🛍️", color: "from-[#D4522B] to-[#C9920A]" },
-];
-
-function Header() {
-  const { user } = useAuth();
-  const [unread, setUnread] = useState(0);
-
-  useEffect(() => {
-    if (!user) { setUnread(0); return; }
-    let active = true;
-    const load = async () => {
-      const { data: convs } = await supabase.from("conversations").select("id").or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
-      const ids = convs?.map(c => c.id) ?? [];
-      if (ids.length === 0) { if (active) setUnread(0); return; }
-      const { count } = await supabase.from("messages").select("id", { count: "exact", head: true }).in("conversation_id", ids).neq("sender_id", user.id).is("read_at", null);
-      if (active) setUnread(count ?? 0);
-    };
-    load();
-    const ch = supabase.channel(`inbox-badge:${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, load)
-      .subscribe();
-    return () => { active = false; supabase.removeChannel(ch); };
-  }, [user]);
-
-  return (
-    <header className="bg-card border-b border-border sticky top-0 z-30">
-      <div className="max-w-[1280px] mx-auto px-4 h-16 flex items-center gap-6">
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src={logoImg} alt="SouqSS" className="w-9 h-9 rounded-xl shadow-[0_4px_14px_oklch(0.64_0.18_38_/_0.25)]" />
-          <div className="text-[22px] font-extrabold tracking-tight leading-none">
-            <span className="text-brand">souq</span><span className="text-foreground">SS</span>
-          </div>
-        </Link>
-        <nav className="hidden lg:flex items-center gap-5 text-[14px] font-semibold text-muted-foreground">
-          <Link to="/browse" className="hover:text-foreground">Browse</Link>
-          <Link to="/shops" className="hover:text-foreground">Shops</Link>
-          {user && <Link to="/favorites" className="hover:text-foreground">♥ Saved</Link>}
-          {user && (
-            <Link to="/inbox" className="hover:text-foreground inline-flex items-center gap-1.5">
-              💬 Inbox{unread > 0 && <span className="text-[11px] font-bold bg-brand text-white rounded-full px-1.5 min-w-[18px] text-center">{unread}</span>}
-            </Link>
-          )}
-          {user && <Link to="/my-shop" className="hover:text-foreground">My shop</Link>}
-          {user && <Link to="/profile" className="hover:text-foreground">My ads</Link>}
-        </nav>
-        <div className="ml-auto flex items-center gap-3">
-          {user ? (
-            <Link to="/profile" className="hidden sm:inline text-[14px] font-semibold text-foreground hover:text-brand">My account</Link>
-          ) : (
-            <Link to="/auth" className="hidden sm:inline text-[14px] font-semibold text-muted-foreground hover:text-foreground">Sign in</Link>
-          )}
-          <Link to={user ? "/post-ad" : "/auth"} className="bg-brand hover:bg-brand-dark transition text-white font-bold px-5 py-2.5 rounded-xl text-[14px] flex items-center gap-2 shadow-[0_4px_14px_oklch(0.64_0.18_38_/_0.3)]">
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Post Ad
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function Hero() {
-  const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [city, setCity] = useState("All South Sudan");
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate({ to: "/browse", search: { q: query || undefined, city: city === "All South Sudan" ? undefined : city } });
+function ListingCard({ listing: L, onOpen, onToggleSave, saved }: {
+  listing: Listing;
+  onOpen: (l: Listing) => void;
+  onToggleSave: (id: string) => void;
+  saved: boolean;
+}) {
+  const bgMap: Record<string, string> = {
+    'bg-peach': '#fde8de', 'bg-sky': '#ddeef8', 'bg-mint': '#ddf0e8',
+    'bg-lav': '#ede8f5', 'bg-sun': '#fef3d8', 'bg-rose': '#fde8e8',
+    'bg-sage': '#e8f0e8', 'bg-cream': '#f5f0e8', 'bg-steel': '#e8edf5',
   };
+  const heroBg = bgMap[L.bg_color || 'bg-peach'] || '#fde8de';
+
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[oklch(0.64_0.18_38)] via-[oklch(0.58_0.17_35)] to-[oklch(0.5_0.14_30)]">
-      <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-      <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
-      <div className="absolute -bottom-24 -left-12 w-80 h-80 rounded-full bg-[oklch(0.55_0.14_155)]/20 blur-3xl" />
-
-      <div className="relative max-w-[1280px] mx-auto px-4 pt-12 pb-32 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur text-white/90 text-[12px] font-semibold mb-5 border border-white/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-[oklch(0.75_0.15_155)] animate-pulse" />
-          South Sudan's marketplace
-        </div>
-        <h1 className="text-white text-[34px] sm:text-[44px] font-extrabold leading-tight tracking-tight mb-2">
-          Buy & sell anything,<br className="sm:hidden" /> <span className="italic font-semibold opacity-90">close to home.</span>
-        </h1>
-        <p className="text-white/80 text-[15px] mb-7 max-w-[520px] mx-auto">
-          From Juba to Wau — find what you need or reach the right buyer in minutes.
-        </p>
-
-        <form onSubmit={submit} className="max-w-[720px] mx-auto bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.35)] p-1.5 flex items-stretch gap-1.5">
-          <div className="hidden sm:flex items-center gap-2 px-3 text-foreground text-[14px] font-semibold border-r border-border whitespace-nowrap">
-            <svg viewBox="0 0 24 24" className="w-4 h-4 text-brand" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <select value={city} onChange={(e) => setCity(e.target.value)} className="bg-transparent outline-none font-semibold pr-2 cursor-pointer">
-              {CITIES.map((c) => <option key={c}>{c}</option>)}
-            </select>
-          </div>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 px-3 sm:px-4 py-3 text-[15px] outline-none bg-transparent placeholder:text-muted-foreground" placeholder="Search iPhone, Hilux, apartment…" />
-          <button type="submit" className="bg-brand hover:bg-brand-dark transition text-white font-bold px-5 sm:px-7 rounded-xl flex items-center gap-2 text-[14px]" aria-label="Search">
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <span className="hidden sm:inline">Search</span>
-          </button>
-        </form>
-
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-          <span className="text-white/70 text-[12px] font-semibold mr-1">Trending:</span>
-          {QUICK_CHIPS.map((q) => (
-            <Link key={q} to="/browse" search={{ q }} className="px-3 py-1 rounded-full bg-white/12 hover:bg-white/20 backdrop-blur text-white text-[12px] font-medium border border-white/20 transition">
-              {q}
-            </Link>
-          ))}
+    <div
+      onClick={() => onOpen(L)}
+      className="bg-white rounded-2xl overflow-hidden border border-[#e5ddd8] cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
+    >
+      <div className="h-40 flex items-center justify-center relative" style={{ background: heroBg }}>
+        <span className="text-6xl">{L.emoji || '🛒'}</span>
+        {L.is_premium && (
+          <span className="absolute top-2.5 left-2.5 bg-[#1a1a1a] text-white text-[10px] font-bold rounded-full px-2.5 py-1 flex items-center gap-1">⭐ PREMIUM</span>
+        )}
+        <button
+          onClick={e => { e.stopPropagation(); onToggleSave(L.id); }}
+          className="absolute top-2.5 right-2.5 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-md hover:bg-orange-50 transition-colors text-sm"
+        >{saved ? '❤️' : '🔖'}</button>
+        {L.is_verified && (
+          <span className="absolute bottom-2.5 left-2.5 bg-white rounded-full px-2.5 py-1 text-[10px] font-semibold shadow-sm flex items-center gap-1">
+            <span className="text-green-500">✓</span> Verified
+          </span>
+        )}
+      </div>
+      <div className="p-3.5">
+        <div className="text-[17px] font-extrabold text-[#d94f1e] mb-1">{L.price_label}</div>
+        <div className="text-[13px] font-semibold text-[#1a1a1a] line-clamp-2 leading-snug mb-2.5">{L.title}</div>
+        <div className="flex items-center justify-between pt-2.5 border-t border-[#f5f0ed]">
+          <span className="text-[11px] text-[#777]">📍 {L.location}</span>
+          <span className="text-[11px] font-bold bg-[#fff5f0] text-[#d94f1e] rounded-full px-2 py-0.5">{L.condition}</span>
         </div>
       </div>
-
-      <svg className="absolute bottom-0 left-0 right-0 w-full text-background" viewBox="0 0 1440 60" preserveAspectRatio="none">
-        <path d="M0,30 Q360,60 720,30 T1440,30 L1440,60 L0,60 Z" fill="currentColor" />
-      </svg>
-    </section>
-  );
-}
-
-function CategoryList() {
-  return (
-    <aside>
-      <div className="bg-card rounded-2xl border border-border overflow-hidden">
-        <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-gradient-to-r from-brand-soft to-transparent">
-          <h3 className="font-extrabold text-[14px] text-foreground">All Categories</h3>
-          <span className="text-[11px] font-bold text-brand">15</span>
-        </div>
-        <div className="max-h-[600px] overflow-y-auto no-scrollbar">
-          {CATEGORIES.map((c, i) => (
-            <Link key={c.name} to="/browse" search={{ category: c.name }} className={`group flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-brand-soft transition ${i !== CATEGORIES.length - 1 ? "border-b border-border" : ""}`}>
-              <div className="w-9 h-9 rounded-xl bg-muted group-hover:bg-white flex items-center justify-center text-base shrink-0 transition">{c.icon}</div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[13.5px] font-semibold text-foreground leading-tight group-hover:text-brand transition">{c.name}</div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">{c.count} ads</div>
-              </div>
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-muted-foreground group-hover:text-brand group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Promo card */}
-      <div className="mt-4 relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-[oklch(0.3_0.05_50)] to-[oklch(0.18_0.02_50)] text-white">
-        <div className="absolute -top-8 -right-6 w-32 h-32 rounded-full bg-brand/30 blur-2xl" />
-        <div className="relative">
-          <div className="text-[11px] font-bold tracking-widest text-brand mb-2">FOR SELLERS</div>
-          <h4 className="font-extrabold text-[17px] leading-tight mb-1.5">Boost your sales with a shop</h4>
-          <p className="text-white/70 text-[12px] mb-4 leading-relaxed">Create your own storefront and build trust with buyers. Free to set up.</p>
-          <Link to="/my-shop" className="inline-block bg-white text-foreground font-bold text-[12.5px] px-4 py-2 rounded-lg hover:bg-brand-soft transition">Open a shop →</Link>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-function OpenShopBanner() {
-  const { user } = useAuth();
-  return (
-    <section className="mb-6 relative overflow-hidden rounded-2xl bg-gradient-to-br from-[oklch(0.55_0.16_145)] via-[oklch(0.5_0.14_140)] to-[oklch(0.4_0.12_135)] border border-[oklch(0.55_0.16_145)]/30">
-      <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
-      <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/15 blur-2xl" />
-      <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-[oklch(0.7_0.12_100)]/15 blur-2xl" />
-      <div className="relative flex flex-col sm:flex-row items-start sm:items-center gap-5 p-6 sm:p-7">
-        <div className="flex-1">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 text-white/90 text-[11px] font-bold mb-2.5 border border-white/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-[oklch(0.8_0.12_100)] animate-pulse" />
-            NEW
-          </div>
-          <h3 className="text-white text-[20px] sm:text-[24px] font-extrabold leading-tight mb-1.5">
-            Open your online shop on SouqSS
-          </h3>
-          <p className="text-white/75 text-[13.5px] leading-relaxed max-w-[520px]">
-            Sell products or offer services — reach thousands of buyers across South Sudan. It's free to start.
-          </p>
-        </div>
-        <Link
-          to={user ? "/my-shop" : "/auth"}
-          className="shrink-0 bg-white text-[oklch(0.35_0.12_135)] hover:bg-white/95 font-extrabold px-6 py-3 rounded-xl text-[14px] shadow-[0_8px_24px_-6px_rgba(0,0,0,0.25)] transition flex items-center gap-2"
-        >
-          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          {user ? "Open my shop" : "Get started free"}
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-function StatBanner() {
-  const stats = [
-    { n: "100k+", l: "Active ads" },
-    { n: "50k+", l: "Trusted sellers" },
-    { n: "12", l: "Cities covered" },
-    { n: "4.8★", l: "Buyer rating" },
-  ];
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 bg-card rounded-2xl border border-border overflow-hidden mb-5">
-      {stats.map((s, i) => (
-        <div key={s.l} className={`p-4 text-center ${i !== 0 ? "border-l border-border" : ""} ${i >= 2 ? "border-t sm:border-t-0" : ""}`}>
-          <div className="text-[20px] font-extrabold text-brand">{s.n}</div>
-          <div className="text-[11px] text-muted-foreground font-semibold mt-0.5">{s.l}</div>
-        </div>
-      ))}
     </div>
   );
 }
 
-function FeaturedShops() {
-  return (
-    <section className="mb-6">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[18px] font-extrabold text-foreground flex items-center gap-2">🏪 Featured Shops</h2>
-        <Link to="/shops" className="text-[12.5px] font-bold text-brand cursor-pointer hover:underline">See all →</Link>
-      </div>
-      <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
-        {SHOPS.map((s) => (
-          <div key={s.name} className="min-w-[160px] bg-card rounded-2xl overflow-hidden border border-border cursor-pointer hover:-translate-y-0.5 hover:shadow-md transition shrink-0">
-            <div className={`h-14 bg-gradient-to-br ${s.color}`} />
-            <div className="px-3 pb-3">
-              <div className="w-11 h-11 rounded-xl border-[3px] border-card -mt-5 bg-muted flex items-center justify-center text-xl mb-1.5">{s.logo}</div>
-              <div className="text-[13px] font-bold truncate">{s.name}</div>
-              <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{s.cat}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function AdCard({ ad }: { ad: Ad }) {
-  return (
-    <article className="group bg-card rounded-2xl overflow-hidden border border-border cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.12)] transition relative">
-      {ad.premium && (
-        <div className="absolute top-2.5 left-2.5 z-10 bg-foreground text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md tracking-wider flex items-center gap-1">
-          <span className="text-brand">★</span> PREMIUM
-        </div>
-      )}
-      <div className={`relative aspect-square ${ad.bg} flex items-center justify-center text-[3.5rem]`}>
-        <span className="group-hover:scale-110 transition-transform duration-300">{ad.emoji}</span>
-        <button className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/95 backdrop-blur flex items-center justify-center hover:bg-white shadow-sm" aria-label="Save">
-          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-muted-foreground hover:text-brand transition" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-        </button>
-        {ad.badge && (
-          <span className="absolute bottom-2.5 left-2.5 bg-cta text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">{ad.badge}</span>
-        )}
-        {ad.verified && (
-          <span className="absolute bottom-2.5 right-2.5 bg-white/95 backdrop-blur text-foreground text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-            <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 text-cta" fill="currentColor"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg>
-            Verified
-          </span>
-        )}
-      </div>
-      <div className="p-3">
-        <div className="text-price font-extrabold text-[15px] mb-1 tracking-tight">{ad.price}</div>
-        <div className="text-[13px] font-semibold text-foreground leading-snug mb-2 line-clamp-2 min-h-[34px]">{ad.title}</div>
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-[11.5px] text-muted-foreground flex items-center gap-1 min-w-0">
-            <svg viewBox="0 0 24 24" className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span className="truncate">{ad.location}</span>
-          </div>
-          {ad.condition && (
-            <span className="text-[10.5px] bg-brand-soft text-brand-dark px-2 py-0.5 rounded font-bold shrink-0">{ad.condition}</span>
-          )}
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="bg-foreground text-white/80 mt-16">
-      <div className="max-w-[1280px] mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
-        <div>
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/></svg>
-            </div>
-            <span className="text-xl font-extrabold text-white"><span className="text-brand">souq</span>SS</span>
-          </div>
-          <p className="text-white/60 text-[13px] leading-relaxed">South Sudan's largest marketplace. Sell faster, buy smarter.</p>
-        </div>
-        <div>
-          <h4 className="text-white font-bold mb-3 text-[12px] uppercase tracking-wider">SouqSS</h4>
-          <ul className="space-y-2 text-[13px] text-white/60"><li className="hover:text-white cursor-pointer">About us</li><li className="hover:text-white cursor-pointer">Press</li><li className="hover:text-white cursor-pointer">Careers</li><li className="hover:text-white cursor-pointer">Contact</li></ul>
-        </div>
-        <div>
-          <h4 className="text-white font-bold mb-3 text-[12px] uppercase tracking-wider">Support</h4>
-          <ul className="space-y-2 text-[13px] text-white/60"><li className="hover:text-white cursor-pointer">How to sell</li><li className="hover:text-white cursor-pointer">How to buy</li><li className="hover:text-white cursor-pointer">Safety tips</li><li className="hover:text-white cursor-pointer">Terms</li></ul>
-        </div>
-        <div>
-          <h4 className="text-white font-bold mb-3 text-[12px] uppercase tracking-wider">Follow</h4>
-          <ul className="space-y-2 text-[13px] text-white/60"><li className="hover:text-white cursor-pointer">Facebook</li><li className="hover:text-white cursor-pointer">Twitter / X</li><li className="hover:text-white cursor-pointer">Instagram</li><li className="hover:text-white cursor-pointer">YouTube</li></ul>
-        </div>
-      </div>
-      <div className="border-t border-white/10 py-4 text-center text-[12px] text-white/50">© {new Date().getFullYear()} SouqSS — Made with ♥ in Juba.</div>
-    </footer>
-  );
-}
-
 function Home() {
-  const [live, setLive] = useState<DbListing[]>([]);
+  const { user } = useAuth();
+  const { msg: toastMsg, toast } = useToast();
+
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<{ category?: string; search?: string; minPrice?: number; maxPrice?: number }>({});
+  const [activeCat, setActiveCat] = useState('All');
+
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [postOpen, setPostOpen] = useState(false);
+
+  const [searchInput, setSearchInput] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+
+  const searchDebounce = useRef<ReturnType<typeof setTimeout>>();
+
+  // Load listings
+  const loadListings = useCallback(async (filter = activeFilter, reset = true) => {
+    setLoading(true);
+    const start = reset ? 0 : offset;
+
+    let q = supabase
+      .from('listings')
+      .select('*, profiles(full_name, phone, rating, review_count, verified, member_since)')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+
+    if (filter.category && filter.category !== 'All') q = q.eq('category', filter.category);
+    if (filter.search) q = q.or(`title.ilike.%${filter.search}%,description.ilike.%${filter.search}%,location.ilike.%${filter.search}%`);
+    if (filter.minPrice) q = q.gte('price', filter.minPrice);
+    if (filter.maxPrice) q = q.lte('price', filter.maxPrice);
+
+    q = q.range(start, start + PAGE_SIZE - 1);
+    const { data } = await q;
+    const rows = (data || []) as Listing[];
+
+    setListings(prev => reset ? rows : [...prev, ...rows]);
+    setHasMore(rows.length === PAGE_SIZE);
+    setOffset(start + rows.length);
+    setLoading(false);
+  }, [activeFilter, offset]);
+
+  useEffect(() => { loadListings({}, true); }, []);
+
+  // Load saved IDs when user changes
   useEffect(() => {
-    supabase.from("listings").select("id,title,price,currency,city,category,condition,images,created_at").eq("status", "active").order("created_at", { ascending: false }).limit(24)
-      .then(({ data }) => setLive(data || []));
-  }, []);
+    if (!user) { setSavedIds(new Set()); return; }
+    supabase.from('saved_listings').select('listing_id').eq('user_id', user.id)
+      .then(({ data }) => setSavedIds(new Set((data || []).map((r: any) => r.listing_id))));
+  }, [user?.id]);
+
+  const toggleSave = async (id: string) => {
+    if (!user) { setAuthMode('signin'); setAuthOpen(true); return; }
+    const isSaved = savedIds.has(id);
+    if (isSaved) {
+      await supabase.from('saved_listings').delete().eq('user_id', user.id).eq('listing_id', id);
+      setSavedIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+      toast('Removed from favourites');
+    } else {
+      await supabase.from('saved_listings').insert({ user_id: user.id, listing_id: id });
+      setSavedIds(prev => new Set([...prev, id]));
+      toast('❤️ Saved to your favourites');
+    }
+  };
+
+  const applySearch = (q: string) => {
+    clearTimeout(searchDebounce.current);
+    searchDebounce.current = setTimeout(() => {
+      const f = { ...activeFilter, search: q || undefined };
+      setActiveFilter(f);
+      loadListings(f, true);
+    }, 350);
+  };
+
+  const applyCategory = (cat: string) => {
+    setActiveCat(cat);
+    const f = { ...activeFilter, category: cat === 'All' ? undefined : cat };
+    setActiveFilter(f);
+    loadListings(f, true);
+  };
+
+  const applyPriceFilter = () => {
+    const f = {
+      ...activeFilter,
+      minPrice: minPrice ? parseFloat(minPrice) : undefined,
+      maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+    };
+    setActiveFilter(f);
+    loadListings(f, true);
+    toast('Filter applied');
+  };
+
+  const openPostAd = () => {
+    if (!user) { setAuthMode('signin'); setAuthOpen(true); return; }
+    setPostOpen(true);
+  };
+
+  const signOut = () => { if (confirm('Sign out of SouqSS?')) supabase.auth.signOut(); };
+
+  const userInitial = user?.user_metadata?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?';
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <Hero />
+    <div className="min-h-screen bg-[#f2ede9]" style={{ fontFamily: 'Inter, sans-serif' }}>
 
-      <main className="max-w-[1280px] mx-auto px-4 -mt-14 relative z-10">
-        {/* Category chip row */}
-        <div className="bg-card border border-border rounded-2xl p-2 mb-5 flex gap-2 overflow-x-auto no-scrollbar shadow-sm">
-          <Link to="/browse" className="px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 border-[1.5px] bg-brand border-brand text-white shadow-[0_4px_12px_oklch(0.64_0.18_38_/_0.3)]">All</Link>
+      {/* ── TOP BAR ── */}
+      <div className="bg-[#1a1a1a] text-white/65 text-xs py-1.5">
+        <div className="max-w-[1320px] mx-auto px-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span>🌍 South Sudan's #1 Marketplace</span>
+            <span className="hidden sm:inline">📱 Download App</span>
+          </div>
+          <div className="flex items-center gap-4">
+            {!user ? (
+              <>
+                <button onClick={() => { setAuthMode('signin'); setAuthOpen(true); }} className="hover:text-white transition-colors">Sign In</button>
+                <button onClick={() => { setAuthMode('signup'); setAuthOpen(true); }} className="text-[#d94f1e] font-bold hover:text-orange-400 transition-colors">Create Account</button>
+              </>
+            ) : (
+              <button onClick={signOut} className="hover:text-white transition-colors">Sign Out</button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── MAIN NAV ── */}
+      <nav className="bg-white border-b border-[#e5ddd8] sticky top-0 z-[200] shadow-sm">
+        <div className="max-w-[1320px] mx-auto px-6 flex items-center gap-5 h-[68px]">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <div className="w-10 h-10 bg-[#1a1a1a] rounded-[10px] flex items-center justify-center text-xl">🛍️</div>
+            <span className="text-2xl font-black tracking-tight">souq<span className="text-[#d94f1e]">SS</span></span>
+          </div>
+
+          {/* Search */}
+          <div className="flex-1 flex items-center bg-[#f5f0ed] border-2 border-transparent rounded-xl overflow-hidden focus-within:border-[#d94f1e] focus-within:bg-white transition-all">
+            <select className="bg-transparent border-none border-r border-[#e5ddd8] px-3 py-0 text-[13px] text-[#777] outline-none h-11 cursor-pointer">
+              <option>All Categories</option>
+              {CATEGORIES.slice(1).map(c => <option key={c.name}>{c.name}</option>)}
+            </select>
+            <input
+              type="text"
+              placeholder="Search listings, brands, locations…"
+              className="flex-1 bg-transparent border-none px-3.5 text-sm outline-none h-11"
+              value={searchInput}
+              onChange={e => { setSearchInput(e.target.value); applySearch(e.target.value); }}
+              onKeyDown={e => e.key === 'Enter' && applySearch(searchInput)}
+            />
+            <button
+              onClick={() => applySearch(searchInput)}
+              className="w-[52px] h-11 bg-[#d94f1e] flex items-center justify-center hover:bg-[#c04418] transition-colors flex-shrink-0"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            {!user ? (
+              <button
+                onClick={() => { setAuthMode('signin'); setAuthOpen(true); }}
+                className="flex items-center gap-1.5 border-[1.5px] border-[#e5ddd8] bg-white rounded-[10px] px-4 py-2.5 text-[13px] font-semibold hover:border-[#d94f1e] hover:text-[#d94f1e] transition-colors"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Sign In
+              </button>
+            ) : (
+              <button
+                onClick={signOut}
+                className="flex items-center gap-2 border-[1.5px] border-[#e5ddd8] bg-white rounded-[10px] px-3 py-2 text-[13px] font-semibold hover:border-[#d94f1e] transition-colors"
+              >
+                <div className="w-7 h-7 bg-[#d94f1e] rounded-full flex items-center justify-center text-white text-xs font-bold">{userInitial}</div>
+                <span className="hidden sm:inline max-w-[100px] truncate">{userName}</span>
+              </button>
+            )}
+            <button
+              onClick={openPostAd}
+              className="bg-[#d94f1e] text-white rounded-[10px] px-4 py-2.5 text-[13px] font-bold flex items-center gap-1.5 hover:bg-[#c04418] transition-colors"
+            >＋ Post Ad</button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── CATEGORY NAV ── */}
+      <div className="bg-white border-b border-[#e5ddd8] overflow-x-auto">
+        <div className="max-w-[1320px] mx-auto px-6">
+          <div className="flex gap-0 whitespace-nowrap">
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat.name}
+                onClick={() => applyCategory(cat.name)}
+                className={`flex items-center gap-1.5 px-4 py-3.5 text-[13px] font-semibold border-b-2 transition-colors flex-shrink-0 ${
+                  activeCat === cat.name
+                    ? 'border-[#d94f1e] text-[#d94f1e]'
+                    : 'border-transparent text-[#555] hover:text-[#d94f1e] hover:border-[#d94f1e]'
+                }`}
+              >
+                <span>{cat.icon}</span> {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── HERO SEARCH BANNER ── */}
+      <div className="bg-gradient-to-br from-[#1e4e1e] to-[#2d6e2d] py-10 px-6">
+        <div className="max-w-[780px] mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-3.5 py-1.5 text-[11px] font-bold text-white mb-4 tracking-wide">
+            <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+            SOUTH SUDAN'S #1 MARKETPLACE
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-white mb-3 leading-tight">
+            Buy & Sell Anything in<br /><span className="text-[#fde8de]">South Sudan</span>
+          </h1>
+          <p className="text-white/75 text-[15px] mb-6">From Juba to every state — phones, cars, homes, jobs and more.</p>
+          <div className="flex items-center bg-white rounded-2xl overflow-hidden shadow-xl mb-4 max-w-[600px] mx-auto">
+            <input
+              type="text"
+              placeholder="What are you looking for?"
+              className="flex-1 px-5 py-4 text-[15px] outline-none"
+              value={searchInput}
+              onChange={e => { setSearchInput(e.target.value); applySearch(e.target.value); }}
+              onKeyDown={e => e.key === 'Enter' && applySearch(searchInput)}
+            />
+            <button
+              onClick={() => applySearch(searchInput)}
+              className="bg-[#d94f1e] text-white px-7 py-4 text-[15px] font-bold hover:bg-[#c04418] transition-colors flex-shrink-0"
+            >Search</button>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {QUICK_CHIPS.map(chip => (
+              <button
+                key={chip}
+                onClick={() => { const q = chip.replace(/^[^\w]+/, '').split(' ')[0]; setSearchInput(q); applySearch(q); setTimeout(() => document.getElementById('listings-section')?.scrollIntoView({ behavior: 'smooth' }), 100); }}
+                className="bg-white/20 hover:bg-white/30 text-white text-[12px] font-semibold rounded-full px-3.5 py-1.5 border border-white/30 transition-colors"
+              >{chip}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── PAGE BODY ── */}
+      <div className="max-w-[1320px] mx-auto px-6 py-6 flex gap-6">
+
+        {/* ── SIDEBAR ── */}
+        <aside className="w-[260px] flex-shrink-0 hidden lg:flex flex-col gap-4">
+          {/* Categories */}
+          <div className="bg-white rounded-2xl border border-[#e5ddd8] overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#f5f0ed]">
+              <span className="text-[13px] font-bold">All Categories</span>
+              <span className="text-[#d94f1e] text-[13px] font-semibold cursor-pointer hover:underline" onClick={() => applyCategory('All')}>See all</span>
+            </div>
+            {CATEGORIES.slice(1).map(cat => (
+              <button
+                key={cat.name}
+                onClick={() => applyCategory(cat.name)}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 border-b border-[#faf5f3] last:border-0 hover:bg-[#fdf7f5] transition-colors text-left ${activeCat === cat.name ? 'bg-[#fff5f0]' : ''}`}
+              >
+                <span className="text-xl w-7 text-center flex-shrink-0">{cat.icon}</span>
+                <span className="flex-1 text-[13px] font-semibold text-[#1a1a1a]">{cat.name}</span>
+                <span className="text-[11px] text-[#777] bg-[#f5f0ed] rounded-full px-2 py-0.5 font-semibold">{cat.count}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Price filter */}
+          <div className="bg-white rounded-2xl border border-[#e5ddd8] p-4">
+            <div className="text-[12px] font-bold text-[#777] uppercase tracking-wide mb-3">Filter by Price (SSP)</div>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <input
+                type="number"
+                placeholder="Min"
+                className="bg-[#f5f0ed] rounded-[10px] px-3 py-2.5 text-[13px] outline-none focus:ring-2 focus:ring-[#d94f1e] w-full"
+                value={minPrice}
+                onChange={e => setMinPrice(e.target.value)}
+              />
+              <input
+                type="number"
+                placeholder="Max"
+                className="bg-[#f5f0ed] rounded-[10px] px-3 py-2.5 text-[13px] outline-none focus:ring-2 focus:ring-[#d94f1e] w-full"
+                value={maxPrice}
+                onChange={e => setMaxPrice(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={applyPriceFilter}
+              className="w-full bg-[#d94f1e] text-white rounded-[10px] py-2.5 text-[13px] font-bold hover:bg-[#c04418] transition-colors"
+            >Apply Filter</button>
+          </div>
+
+          {/* Post ad CTA */}
+          <div className="bg-gradient-to-br from-[#1a1a1a] to-[#2d2d2d] rounded-2xl p-5 text-white">
+            <div className="text-[11px] font-bold text-[#d94f1e] uppercase tracking-wide mb-2">For Sellers</div>
+            <div className="text-[15px] font-bold mb-2 leading-snug">Start selling today — it's free</div>
+            <p className="text-white/60 text-[12px] mb-4">No fees, no commissions. Reach buyers across South Sudan.</p>
+            <button onClick={openPostAd} className="w-full bg-[#d94f1e] text-white rounded-xl py-2.5 text-[13px] font-bold hover:bg-[#c04418] transition-colors">＋ Post an Ad</button>
+          </div>
+        </aside>
+
+        {/* ── MAIN CONTENT ── */}
+        <main className="flex-1 min-w-0 flex flex-col gap-6">
+
+          {/* Promo banner */}
+          <div className="bg-gradient-to-r from-[#1e4e1e] to-[#2d6e2d] rounded-2xl p-7 flex items-center justify-between gap-5">
+            <div>
+              <div className="inline-flex items-center gap-1.5 bg-white/20 rounded-full px-3 py-1 text-[11px] font-bold text-white mb-3 tracking-wide">
+                <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+                NEW THIS WEEK
+              </div>
+              <h2 className="text-xl font-extrabold text-white mb-2">🌱 Fresh produce now available</h2>
+              <p className="text-white/75 text-[14px]">Order direct from Yei, Torit & Nimule farms — delivery to Juba every week.</p>
+            </div>
+            <button
+              onClick={() => applyCategory('Food & Groceries')}
+              className="bg-white text-[#1a1a1a] rounded-full px-6 py-3 text-[14px] font-bold whitespace-nowrap flex-shrink-0 hover:opacity-90 transition-opacity"
+            >Shop Now →</button>
+          </div>
+
+          {/* Listings */}
+          <div id="listings-section">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-1 h-[22px] bg-[#d94f1e] rounded-full"></div>
+                <h2 className="text-[18px] font-extrabold">
+                  {activeCat === 'All' ? 'Fresh Listings' : activeCat}
+                </h2>
+              </div>
+              <button
+                onClick={() => { setActiveCat('All'); const f = {}; setActiveFilter(f); loadListings(f, true); }}
+                className="text-[13px] font-semibold text-[#d94f1e] hover:underline"
+              >See all →</button>
+            </div>
+
+            {loading && listings.length === 0 ? (
+              <div className="text-center py-16 text-[#aaa]">
+                <div className="text-4xl mb-3">⏳</div>
+                <div className="font-semibold">Loading listings…</div>
+              </div>
+            ) : listings.length === 0 ? (
+              <div className="text-center py-16 text-[#aaa]">
+                <div className="text-4xl mb-3">🔍</div>
+                <div className="text-[15px] font-semibold mb-1">No listings found</div>
+                <div className="text-[13px] mb-4">Try a different search or category</div>
+                <button
+                  onClick={() => { setActiveCat('All'); setSearchInput(''); setActiveFilter({}); loadListings({}, true); }}
+                  className="bg-[#d94f1e] text-white rounded-xl px-5 py-2.5 font-bold text-[13px] hover:bg-[#c04418] transition-colors"
+                >Show all listings</button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
+                {listings.map(L => (
+                  <ListingCard
+                    key={L.id}
+                    listing={L}
+                    onOpen={setSelectedListing}
+                    onToggleSave={toggleSave}
+                    saved={savedIds.has(L.id)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Load more */}
+            {hasMore && listings.length > 0 && (
+              <div className="text-center mt-6">
+                <button
+                  onClick={() => loadListings(activeFilter, false)}
+                  disabled={loading}
+                  className="border-[1.5px] border-[#e5ddd8] bg-white rounded-xl px-9 py-3.5 text-[14px] font-bold hover:border-[#d94f1e] hover:text-[#d94f1e] transition-colors disabled:opacity-60"
+                >{loading ? 'Loading…' : 'Load more listings →'}</button>
+              </div>
+            )}
+          </div>
+
+          {/* Seller CTA */}
+          <div className="bg-gradient-to-br from-[#2c1a0e] to-[#1a0f08] rounded-2xl p-8 flex items-center justify-between gap-6">
+            <div>
+              <div className="text-[11px] font-bold text-[#d94f1e] uppercase tracking-wide mb-2">For Sellers</div>
+              <h2 className="text-xl font-extrabold text-white mb-2">Grow your business with SouqSS</h2>
+              <p className="text-white/60 text-[14px]">Create a free shop, manage all your listings in one place, and reach buyers from every corner of South Sudan. No monthly fees, no commissions.</p>
+            </div>
+            <div className="flex flex-col gap-3 flex-shrink-0">
+              <button onClick={openPostAd} className="bg-[#d94f1e] text-white rounded-xl px-6 py-3 text-[14px] font-bold whitespace-nowrap hover:bg-[#c04418] transition-colors">＋ Post an Ad</button>
+              <button onClick={() => { setAuthMode('signup'); setAuthOpen(true); }} className="border border-white/30 text-white rounded-xl px-6 py-3 text-[14px] font-semibold whitespace-nowrap hover:bg-white/10 transition-colors">Learn more</button>
+            </div>
+          </div>
+
+        </main>
+      </div>
+
+      {/* ── FOOTER ── */}
+      <footer className="bg-[#1a1a1a] text-white mt-12">
+        <div className="max-w-[1320px] mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-5 gap-8">
+          <div className="col-span-2 md:col-span-1">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-9 h-9 bg-[#d94f1e] rounded-[10px] flex items-center justify-center text-xl">🛍️</div>
+              <span className="text-xl font-black">souq<span className="text-[#d94f1e]">SS</span></span>
+            </div>
+            <p className="text-white/50 text-[13px] leading-relaxed">South Sudan's largest marketplace. Sell faster, buy smarter.</p>
+          </div>
           {[
-            { l: "🛍️ For Sale", c: "For Sale" }, { l: "🔧 Services", c: "Services" }, { l: "🏠 Real Estate", c: "Real Estate" },
-            { l: "💻 Electronics", c: "Electronics" }, { l: "🚗 Vehicles", c: "Vehicles" }, { l: "💼 Jobs", c: "Jobs" },
-            { l: "🍽️ Food", c: "Food" }, { l: "🐾 Pets", c: "Pets" },
-          ].map((c) => (
-            <Link key={c.c} to="/browse" search={{ category: c.c }} className="px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 border-[1.5px] bg-card border-border text-muted-foreground hover:border-brand hover:text-brand transition">
-              {c.l}
-            </Link>
+            { title: 'Company', links: ['About SouqSS', 'Press & Media', 'Careers', 'Blog', 'Contact Us'] },
+            { title: 'Buyers', links: ['How to Buy', 'Safety Tips', 'Buyer Protection', 'Verified Sellers'] },
+            { title: 'Sellers', links: ['How to Sell', 'Open a Shop', 'Pricing & Plans', 'Seller Guidelines'] },
+            { title: 'Legal', links: ['Terms of Use', 'Privacy Policy', 'Cookie Policy', 'Report Abuse'] },
+          ].map(col => (
+            <div key={col.title}>
+              <h4 className="text-[13px] font-bold mb-3 text-white">{col.title}</h4>
+              {col.links.map(link => (
+                <div key={link} className="text-[13px] text-white/50 mb-2 hover:text-white cursor-pointer transition-colors">{link}</div>
+              ))}
+            </div>
           ))}
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
-          <div>
-            <OpenShopBanner />
-            <StatBanner />
-            <FeaturedShops />
-
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[20px] font-extrabold text-foreground flex items-center gap-2">
-                <span className="w-1 h-6 bg-brand rounded-full" />
-                Fresh listings
-              </h2>
-              <Link to="/browse" className="text-[12.5px] font-bold text-brand hover:underline">See all →</Link>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-              {live.map((l) => (
-                <Link key={l.id} to="/listings/$id" params={{ id: l.id }} className="group bg-card rounded-2xl overflow-hidden border border-border hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.12)] transition">
-                  <div className="relative aspect-square bg-muted overflow-hidden">
-                    {l.images?.[0] ? (
-                      <img src={l.images[0]} alt={l.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-5xl">📦</div>
-                    )}
-                    <span className="absolute top-2.5 left-2.5 bg-cta text-white text-[9px] font-extrabold px-2 py-0.5 rounded-md tracking-wider">NEW</span>
-                  </div>
-                  <div className="p-3">
-                    <div className="text-price font-extrabold text-[15px] mb-1 tracking-tight">{l.currency} {l.price?.toLocaleString() ?? "—"}</div>
-                    <div className="text-[13px] font-semibold text-foreground leading-snug mb-2 line-clamp-2 min-h-[34px]">{l.title}</div>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-[11.5px] text-muted-foreground truncate">{l.city || l.category}</div>
-                      {l.condition && <span className="text-[10.5px] bg-brand-soft text-brand-dark px-2 py-0.5 rounded font-bold shrink-0">{l.condition}</span>}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-              {ADS.map((ad) => <AdCard key={ad.title} ad={ad} />)}
-            </div>
-
-            <div className="text-center mt-8">
-              <Link to="/browse" className="inline-block bg-card border-2 border-border hover:border-brand hover:text-brand text-foreground font-bold px-8 py-3 rounded-xl text-[14px] transition">
-                Browse all listings →
-              </Link>
-            </div>
+        <div className="border-t border-white/10 px-6 py-4 max-w-[1320px] mx-auto flex items-center justify-between text-[12px] text-white/40">
+          <span>© 2026 SouqSS Technologies Ltd. Made with ♥ in Juba, South Sudan.</span>
+          <div className="flex gap-4">
+            <span className="hover:text-white cursor-pointer">Terms</span>
+            <span className="hover:text-white cursor-pointer">Privacy</span>
           </div>
-
-          {/* RIGHT: categories */}
-          <CategoryList />
         </div>
-      </main>
+      </footer>
 
-
-      <Footer />
+      {/* ── MODALS ── */}
+      <AuthModal
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        defaultMode={authMode}
+      />
+      <ListingModal
+        listing={selectedListing}
+        onClose={() => setSelectedListing(null)}
+        onAuthRequired={() => { setSelectedListing(null); setAuthMode('signin'); setAuthOpen(true); }}
+        user={user}
+        savedIds={savedIds}
+        onToggleSave={toggleSave}
+      />
+      <PostAdModal
+        open={postOpen}
+        onClose={() => setPostOpen(false)}
+        user={user}
+        onSuccess={() => { toast('✓ Your listing is live!'); loadListings({}, true); }}
+      />
+      <Toast message={toastMsg} onDone={() => {}} />
     </div>
   );
 }
