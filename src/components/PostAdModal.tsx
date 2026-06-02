@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { ImageUpload } from './ImageUpload';
 
 interface PostAdModalProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function PostAdModal({ open, onClose, user, onSuccess }: PostAdModalProps
   const [cond, setCond] = useState('Brand New');
   const [location, setLocation] = useState('');
   const [phone, setPhone] = useState('');
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -37,7 +39,7 @@ export function PostAdModal({ open, onClose, user, onSuccess }: PostAdModalProps
 
   const reset = () => {
     setSelectedCat(null); setTitle(''); setDesc(''); setPrice('');
-    setCond('Brand New'); setLocation(''); setPhone(''); setError('');
+    setCond('Brand New'); setLocation(''); setPhone(''); setImages([]); setError('');
   };
 
   const handleClose = () => { reset(); onClose(); };
@@ -60,84 +62,81 @@ export function PostAdModal({ open, onClose, user, onSuccess }: PostAdModalProps
       emoji: selectedCat.emoji,
       bg_color: selectedCat.bg,
       phone: phone.trim() || null,
+      images,
     });
     setLoading(false);
     if (err) { setError(err.message); return; }
-    reset();
-    onClose();
-    onSuccess();
+    reset(); onClose(); onSuccess();
   };
 
-  const inputCls = 'w-full bg-[#f5f0ed] border-2 border-transparent rounded-[10px] px-3.5 py-3 text-sm outline-none focus:border-[#d94f1e] transition-colors';
+  const inp = 'w-full bg-[#f5f0ed] border-2 border-transparent rounded-[10px] px-3.5 py-3 text-sm outline-none focus:border-[#d94f1e] transition-colors';
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 z-[600] flex items-center justify-center p-6 overflow-y-auto"
-      onClick={e => { if (e.target === e.currentTarget) handleClose(); }}
-    >
-      <div className="bg-white rounded-2xl w-full max-w-[560px] max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-8">
-          <div className="flex justify-between items-start mb-2">
+    <div className="fixed inset-0 bg-black/60 z-[600] flex items-center justify-center p-4 overflow-y-auto" onClick={e => { if (e.target === e.currentTarget) handleClose(); }}>
+      <div className="bg-white rounded-2xl w-full max-w-[560px] max-h-[92vh] overflow-y-auto shadow-2xl my-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-start mb-1">
             <h3 className="text-xl font-extrabold">Post an Ad</h3>
-            <button onClick={handleClose} className="text-2xl text-[#aaa] hover:text-[#1a1a1a] leading-none">×</button>
+            <button onClick={handleClose} className="text-2xl text-[#aaa] hover:text-[#1a1a1a]">×</button>
           </div>
           <p className="text-[13px] text-[#777] mb-5">Pick a category then fill in your listing details.</p>
 
           {/* Category grid */}
-          <div className="grid grid-cols-4 gap-2.5 mb-5">
+          <div className="grid grid-cols-4 gap-2 mb-5">
             {CATS.map(cat => (
               <button
                 key={cat.label}
                 onClick={() => setSelectedCat(cat)}
-                className={`rounded-xl border-2 p-3 text-center transition-all ${selectedCat?.label === cat.label ? 'border-[#d94f1e] bg-[#fff5f0]' : 'border-[#e5ddd8] hover:border-[#d94f1e]'}`}
+                className={`rounded-xl border-2 p-2.5 text-center transition-all ${selectedCat?.label === cat.label ? 'border-[#d94f1e] bg-[#fff5f0]' : 'border-[#e5ddd8] hover:border-[#d94f1e]/50'}`}
               >
                 <div className="text-2xl mb-1">{cat.emoji}</div>
-                <div className="text-[11px] font-semibold text-[#1a1a1a]">{cat.label}</div>
+                <div className="text-[10px] font-semibold leading-tight">{cat.label}</div>
               </button>
             ))}
           </div>
 
-          {/* Form */}
           {selectedCat && (
             <>
               <div className="h-px bg-[#f0ebe6] mb-5" />
-              <div className="space-y-3.5">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Photos</label>
+                  <ImageUpload userId={user.id} images={images} onChange={setImages} />
+                </div>
                 <div>
                   <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Ad Title *</label>
-                  <input className={inputCls} type="text" placeholder="e.g. iPhone 14 Pro Max 256GB — sealed box" value={title} onChange={e => setTitle(e.target.value)} />
+                  <input className={inp} type="text" placeholder="e.g. iPhone 14 Pro Max 256GB — sealed box" value={title} onChange={e => setTitle(e.target.value)} />
                 </div>
                 <div>
                   <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Description *</label>
-                  <textarea className={inputCls + ' resize-y'} rows={4} placeholder="Describe your item — condition, age, specs, why you are selling..." value={desc} onChange={e => setDesc(e.target.value)} />
+                  <textarea className={inp + ' resize-y'} rows={4} placeholder="Describe your item — condition, age, specs, why selling…" value={desc} onChange={e => setDesc(e.target.value)} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Price (SSP) *</label>
-                    <input className={inputCls} type="number" placeholder="e.g. 250000" value={price} onChange={e => setPrice(e.target.value)} />
+                    <input className={inp} type="number" placeholder="e.g. 250000" value={price} onChange={e => setPrice(e.target.value)} />
                   </div>
                   <div>
                     <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Condition *</label>
-                    <select className={inputCls + ' cursor-pointer'} value={cond} onChange={e => setCond(e.target.value)}>
+                    <select className={inp + ' cursor-pointer'} value={cond} onChange={e => setCond(e.target.value)}>
                       {CONDITIONS.map(c => <option key={c}>{c}</option>)}
                     </select>
                   </div>
                 </div>
                 <div>
                   <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Location *</label>
-                  <input className={inputCls} type="text" placeholder="e.g. Juba, Hai Amarat" value={location} onChange={e => setLocation(e.target.value)} />
+                  <input className={inp} type="text" placeholder="e.g. Juba, Hai Amarat" value={location} onChange={e => setLocation(e.target.value)} />
                 </div>
                 <div>
                   <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Contact Phone</label>
-                  <input className={inputCls} type="tel" placeholder="+211912345678" value={phone} onChange={e => setPhone(e.target.value)} />
+                  <input className={inp} type="tel" placeholder="+211912345678" value={phone} onChange={e => setPhone(e.target.value)} />
                 </div>
 
-                {error && <p className="text-[13px] text-red-600 font-semibold">{error}</p>}
+                {error && <p className="text-[13px] text-red-600 font-semibold bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 
-                <button
-                  onClick={submit}
-                  disabled={loading}
-                  className="w-full bg-[#d94f1e] text-white rounded-xl py-3.5 text-[15px] font-bold disabled:opacity-70 hover:bg-[#c04418] transition-colors"
-                >{loading ? 'Posting…' : '🚀 Post Ad — Go Live Now'}</button>
+                <button onClick={submit} disabled={loading} className="w-full bg-[#d94f1e] text-white rounded-xl py-3.5 text-[15px] font-bold disabled:opacity-70 hover:bg-[#c04418] transition-colors">
+                  {loading ? 'Posting…' : '🚀 Post Ad — Go Live Now'}
+                </button>
                 <button onClick={handleClose} className="w-full text-[13px] text-[#999] py-2">Cancel</button>
               </div>
             </>

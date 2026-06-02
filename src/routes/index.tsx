@@ -12,6 +12,9 @@ import { SavedListings } from '@/components/SavedListings';
 import { BottomNav } from '@/components/BottomNav';
 import { SearchBar } from '@/components/SearchBar';
 import { useToast, Toast } from '@/components/Toast';
+import { NotificationsBell } from '@/components/NotificationsBell';
+import { SellerProfile } from '@/components/SellerProfile';
+import { BoostModal } from '@/components/BoostModal';
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -139,6 +142,8 @@ function Home() {
   const [savedOpen, setSavedOpen] = useState(false);
   const [bottomNav, setBottomNav] = useState<'home'|'search'|'post'|'saved'|'profile'>('home');
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [sellerProfileId, setSellerProfileId] = useState<string | null>(null);
+  const [boostListing, setBoostListing] = useState<Listing | null>(null);
 
   const filterRef = useRef<{ category?: string; search?: string; minPrice?: number; maxPrice?: number; city?: string; sort?: string }>({});
   const searchDebounce = useRef<ReturnType<typeof setTimeout>>();
@@ -325,6 +330,13 @@ function Home() {
                 <span className="hidden md:inline max-w-[80px] truncate">{userName}</span>
               </button>
             )}
+            <NotificationsBell
+              user={user}
+              onOpenListing={async (id) => {
+                const { data } = await supabase.from('listings').select('*, profiles(full_name, phone, rating, review_count, verified, member_since)').eq('id', id).single();
+                if (data) setSelectedListing(data as Listing);
+              }}
+            />
             <button
               onClick={openPostAd}
               className="bg-[#d94f1e] text-white rounded-[10px] px-3 lg:px-4 py-2 text-[13px] font-bold flex items-center gap-1 hover:bg-[#c04418] transition-colors"
@@ -668,6 +680,20 @@ function Home() {
         user={user}
         savedIds={savedIds}
         onToggleSave={toggleSave}
+        onViewSeller={(id) => { setSelectedListing(null); setSellerProfileId(id); }}
+        onBoost={(l) => { setSelectedListing(null); setBoostListing(l); }}
+      />
+      <SellerProfile
+        sellerId={sellerProfileId}
+        onClose={() => setSellerProfileId(null)}
+        onOpenListing={(l) => { setSellerProfileId(null); setSelectedListing(l); }}
+        currentUser={user}
+      />
+      <BoostModal
+        listing={boostListing}
+        onClose={() => setBoostListing(null)}
+        user={user}
+        onSuccess={() => { toast('🚀 Boost activated!'); loadListings({}, true); }}
       />
       <PostAdModal
         open={postOpen}
