@@ -243,7 +243,7 @@ function Home() {
 
   const openPostAd = () => {
     if (!user) { setAuthMode('signin'); setAuthOpen(true); return; }
-    setPostOpen(true);
+    navigate({ to: '/post' });
   };
 
   const signOut = () => { if (confirm('Sign out of SouqSS?')) supabase.auth.signOut(); };
