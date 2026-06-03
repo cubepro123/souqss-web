@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -117,6 +117,7 @@ function ListingCard({ listing: L, onOpen, onToggleSave, saved }: {
 function Home() {
   const { user } = useAuth();
   const { msg: toastMsg, toast } = useToast();
+  const navigate = useNavigate();
 
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -268,7 +269,7 @@ function Home() {
               </>
             ) : (
               <>
-                <button onClick={() => setMyListingsOpen(true)} className="hover:text-white transition-colors">My Listings</button>
+                <button onClick={() => navigate({ to: '/profile' })} className="hover:text-white transition-colors">My Profile</button>
                 <button onClick={signOut} className="hover:text-white transition-colors">Sign Out</button>
               </>
             )}
@@ -323,7 +324,7 @@ function Home() {
               </button>
             ) : (
               <button
-                onClick={() => setMyListingsOpen(true)}
+                onClick={() => navigate({ to: '/profile' })}
                 className="hidden sm:flex items-center gap-2 border-[1.5px] border-[#e5ddd8] bg-white rounded-[10px] px-3 py-2 text-[13px] font-semibold hover:border-[#d94f1e] transition-colors"
               >
                 <div className="w-6 h-6 bg-[#d94f1e] rounded-full flex items-center justify-center text-white text-xs font-bold">{userInitial}</div>
@@ -665,7 +666,7 @@ function Home() {
         onProfile={() => {
           setBottomNav('profile');
           if (!user) { setAuthMode('signin'); setAuthOpen(true); }
-          else setMyListingsOpen(true);
+          else navigate({ to: '/profile' });
         }}
         user={user}
         savedCount={savedIds.size}
