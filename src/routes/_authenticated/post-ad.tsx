@@ -9,18 +9,137 @@ export const Route = createFileRoute('/_authenticated/post-ad')({
 });
 
 const CATS = [
-  { label: 'Electronics', emoji: '📱', bg: 'bg-peach', subs: ['Mobile Phones', 'Laptops & Computers', 'TVs & Audio', 'Cameras', 'Gaming', 'Accessories', 'Other Electronics'] },
-  { label: 'Vehicles', emoji: '🚗', bg: 'bg-sky', subs: ['Cars', 'Motorcycles & Boda Boda', 'Trucks & Lorries', 'Buses & Minibuses', 'Spare Parts', 'Other Vehicles'] },
-  { label: 'Real Estate', emoji: '🏠', bg: 'bg-mint', subs: ['Houses for Rent', 'Houses for Sale', 'Apartments', 'Land & Plots', 'Commercial Property', 'Short Stay'] },
-  { label: 'Fashion', emoji: '👗', bg: 'bg-rose', subs: ['Women\'s Clothing', 'Men\'s Clothing', 'Shoes', 'Bags & Accessories', 'Traditional Wear', 'Kids\' Clothing'] },
-  { label: 'Home & Furniture', emoji: '🛋️', bg: 'bg-cream', subs: ['Sofas & Chairs', 'Beds & Mattresses', 'Kitchen Items', 'Home Décor', 'Appliances', 'Garden & Outdoor'] },
-  { label: 'Food & Groceries', emoji: '🥭', bg: 'bg-sage', subs: ['Fresh Produce', 'Grains & Cereals', 'Beverages', 'Packaged Foods', 'Farm Products'] },
-  { label: 'Jobs', emoji: '💼', bg: 'bg-lav', subs: ['Full Time', 'Part Time', 'Contract', 'Internship', 'Remote Work'] },
-  { label: 'Services', emoji: '🔧', bg: 'bg-steel', subs: ['Repairs & Maintenance', 'Transport & Delivery', 'Cleaning', 'Construction', 'Professional Services', 'Other Services'] },
-  { label: 'Industrial', emoji: '⚙️', bg: 'bg-lav', subs: ['Generators', 'Solar Equipment', 'Machinery', 'Tools', 'Construction Materials'] },
-  { label: 'Pets', emoji: '🐾', bg: 'bg-mint', subs: ['Dogs', 'Cats', 'Poultry', 'Livestock', 'Pet Supplies'] },
-  { label: 'Beauty & Care', emoji: '💄', bg: 'bg-rose', subs: ['Skincare', 'Hair Products', 'Makeup', 'Perfumes', 'Salon Equipment'] },
-  { label: 'Kids & Baby', emoji: '🧸', bg: 'bg-sun', subs: ['Toys', 'Baby Gear', 'Kids\' Furniture', 'School Supplies'] },
+  { label: 'Vehicles', emoji: '🚗', bg: 'bg-sky', subs: [
+    { name: 'Cars', icon: '🚗' },
+    { name: 'Motorcycles & Boda Boda', icon: '🏍️' },
+    { name: 'Trucks & Lorries', icon: '🚛' },
+    { name: 'Water Trucks', icon: '🚰' },
+    { name: 'Buses & Minibuses', icon: '🚌' },
+    { name: 'Pickup Trucks', icon: '🛻' },
+    { name: 'Tuk Tuks', icon: '🛺' },
+    { name: 'Tractors & Farm Equipment', icon: '🚜' },
+    { name: 'Boats & Canoes', icon: '⛵' },
+    { name: 'Spare Parts & Accessories', icon: '🔩' },
+    { name: 'Other Vehicles', icon: '🚙' },
+  ]},
+  { label: 'Electronics', emoji: '📱', bg: 'bg-peach', subs: [
+    { name: 'Mobile Phones', icon: '📱' },
+    { name: 'Laptops & Computers', icon: '💻' },
+    { name: 'TVs & Screens', icon: '📺' },
+    { name: 'Audio & Speakers', icon: '🔊' },
+    { name: 'Cameras & Photography', icon: '📷' },
+    { name: 'Gaming', icon: '🎮' },
+    { name: 'Solar & Power Banks', icon: '☀️' },
+    { name: 'Printers & Scanners', icon: '🖨️' },
+    { name: 'Accessories & Cables', icon: '🔌' },
+    { name: 'Other Electronics', icon: '📡' },
+  ]},
+  { label: 'Real Estate', emoji: '🏠', bg: 'bg-mint', subs: [
+    { name: 'Houses for Rent', icon: '🏠' },
+    { name: 'Houses for Sale', icon: '🏡' },
+    { name: 'Apartments & Flats', icon: '🏢' },
+    { name: 'Land & Plots', icon: '🌍' },
+    { name: 'Commercial Property', icon: '🏪' },
+    { name: 'Office Space', icon: '🏬' },
+    { name: 'Short Stay / Guest House', icon: '🛏️' },
+    { name: 'Warehouse & Storage', icon: '🏭' },
+  ]},
+  { label: 'Pets', emoji: '🐾', bg: 'bg-sage', subs: [
+    { name: 'Dogs', icon: '🐕' },
+    { name: 'Cats', icon: '🐈' },
+    { name: 'Chickens & Poultry', icon: '🐔' },
+    { name: 'Goats & Sheep', icon: '🐐' },
+    { name: 'Cattle & Cows', icon: '🐄' },
+    { name: 'Birds', icon: '🦜' },
+    { name: 'Fish & Aquarium', icon: '🐠' },
+    { name: 'Pet Food & Supplies', icon: '🦴' },
+    { name: 'Veterinary Services', icon: '💉' },
+    { name: 'Other Animals', icon: '🐾' },
+  ]},
+  { label: 'Fashion', emoji: '👗', bg: 'bg-rose', subs: [
+    { name: "Women's Clothing", icon: '👗' },
+    { name: "Men's Clothing", icon: '👔' },
+    { name: 'Shoes & Sandals', icon: '👟' },
+    { name: 'Bags & Handbags', icon: '👜' },
+    { name: 'Watches & Jewellery', icon: '⌚' },
+    { name: 'Traditional Wear', icon: '👘' },
+    { name: 'Sunglasses & Accessories', icon: '🕶️' },
+    { name: "Kids' Clothing", icon: '🧒' },
+    { name: 'Second-hand / Mitumba', icon: '♻️' },
+  ]},
+  { label: 'Home & Furniture', emoji: '🛋️', bg: 'bg-cream', subs: [
+    { name: 'Sofas & Chairs', icon: '🛋️' },
+    { name: 'Beds & Mattresses', icon: '🛏️' },
+    { name: 'Dining Tables & Sets', icon: '🍽️' },
+    { name: 'Kitchen Items & Cookware', icon: '🍳' },
+    { name: 'Home Appliances', icon: '🧺' },
+    { name: 'Home Décor', icon: '🖼️' },
+    { name: 'Curtains & Rugs', icon: '🏮' },
+    { name: 'Garden & Outdoor', icon: '🌿' },
+    { name: 'Office Furniture', icon: '🪑' },
+  ]},
+  { label: 'Food & Groceries', emoji: '🥭', bg: 'bg-sage', subs: [
+    { name: 'Fresh Fruits & Vegetables', icon: '🥦' },
+    { name: 'Grains & Cereals', icon: '🌾' },
+    { name: 'Meat & Fish', icon: '🥩' },
+    { name: 'Beverages & Drinks', icon: '🥤' },
+    { name: 'Packaged & Canned Foods', icon: '🥫' },
+    { name: 'Farm Products', icon: '🌽' },
+    { name: 'Cooking Oil & Spices', icon: '🧂' },
+    { name: 'Bakery & Snacks', icon: '🍞' },
+  ]},
+  { label: 'Services', emoji: '🔧', bg: 'bg-steel', subs: [
+    { name: 'Car Repair & Mechanics', icon: '🔧' },
+    { name: 'Construction & Building', icon: '🏗️' },
+    { name: 'Cleaning Services', icon: '🧹' },
+    { name: 'Transport & Delivery', icon: '🚚' },
+    { name: 'IT & Tech Support', icon: '💻' },
+    { name: 'Tailoring & Fashion', icon: '✂️' },
+    { name: 'Catering & Cooking', icon: '👨‍🍳' },
+    { name: 'Photography & Video', icon: '📷' },
+    { name: 'Security Services', icon: '💂' },
+    { name: 'Professional Services', icon: '💼' },
+    { name: 'Other Services', icon: '🛠️' },
+  ]},
+  { label: 'Industrial', emoji: '⚙️', bg: 'bg-lav', subs: [
+    { name: 'Generators', icon: '⚡' },
+    { name: 'Solar Panels & Equipment', icon: '☀️' },
+    { name: 'Heavy Machinery', icon: '🏗️' },
+    { name: 'Construction Materials', icon: '🧱' },
+    { name: 'Tools & Equipment', icon: '🔨' },
+    { name: 'Medical Equipment', icon: '🏥' },
+    { name: 'Agricultural Equipment', icon: '🚜' },
+    { name: 'Water Pumps & Tanks', icon: '💧' },
+  ]},
+  { label: 'Jobs', emoji: '💼', bg: 'bg-lav', subs: [
+    { name: 'Full Time', icon: '👔' },
+    { name: 'Part Time', icon: '⏰' },
+    { name: 'Contract & Freelance', icon: '📋' },
+    { name: 'NGO & International Orgs', icon: '🌍' },
+    { name: 'Government & Public Sector', icon: '🏛️' },
+    { name: 'Internship & Volunteer', icon: '🎓' },
+    { name: 'Driver & Transport', icon: '🚗' },
+    { name: 'Security Guard', icon: '💂' },
+    { name: 'Remote Work', icon: '💻' },
+  ]},
+  { label: 'Beauty & Care', emoji: '💄', bg: 'bg-rose', subs: [
+    { name: 'Skincare & Lotions', icon: '🧴' },
+    { name: 'Hair Products & Wigs', icon: '💇' },
+    { name: 'Makeup & Cosmetics', icon: '💄' },
+    { name: 'Perfumes & Fragrances', icon: '🌸' },
+    { name: 'Nail Care', icon: '💅' },
+    { name: 'Salon & Barber Equipment', icon: '✂️' },
+    { name: 'Men's Grooming', icon: '🪒' },
+  ]},
+  { label: 'Kids & Baby', emoji: '🧸', bg: 'bg-sun', subs: [
+    { name: 'Toys & Games', icon: '🧸' },
+    { name: 'Baby Clothes', icon: '👶' },
+    { name: 'Strollers & Prams', icon: '🍼' },
+    { name: "Kids' Furniture", icon: '🪑' },
+    { name: 'School Bags & Supplies', icon: '🎒' },
+    { name: 'Baby Food & Formula', icon: '🥛' },
+    { name: 'Car Seats & Safety', icon: '🚗' },
+  ]},
 ];
 
 const CONDITIONS = ['Brand New', 'Like New', 'Used — Good condition', 'Used — Fair condition', 'For Parts / Not Working'];
@@ -34,6 +153,7 @@ function PostAdPage() {
   const [selectedCat, setSelectedCat] = useState<typeof CATS[0] | null>(null);
   const [selectedSub, setSelectedSub] = useState('');
   const [showCatPicker, setShowCatPicker] = useState(false);
+  const [pickerStep, setPickerStep] = useState<'cat' | 'sub'>('cat');
   const [showCityPicker, setShowCityPicker] = useState(false);
 
   const [title, setTitle] = useState('');
@@ -313,37 +433,59 @@ function PostAdPage() {
 
       {/* ── CATEGORY PICKER ── */}
       {showCatPicker && (
-        <div className="fixed inset-0 bg-black/50 z-[700] flex items-end sm:items-center justify-center" onClick={e => { if (e.target === e.currentTarget) setShowCatPicker(false); }}>
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-[500px] max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#f0f0f0]">
-              <h3 className="text-[16px] font-extrabold">Select Category</h3>
-              <button onClick={() => setShowCatPicker(false)} className="text-2xl text-[#aaa]">×</button>
+        <div className="fixed inset-0 bg-black/50 z-[700] flex items-end sm:items-center justify-center" onClick={e => { if (e.target === e.currentTarget) { setShowCatPicker(false); setPickerStep('cat'); } }}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-[500px] max-h-[88vh] flex flex-col">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-[#f0f0f0]">
+              {pickerStep === 'sub' && (
+                <button onClick={() => setPickerStep('cat')} className="text-[#d94f1e] font-bold text-lg leading-none">‹</button>
+              )}
+              <h3 className="text-[16px] font-extrabold flex-1">
+                {pickerStep === 'cat' ? 'Select Category' : selectedCat?.label}
+              </h3>
+              <button onClick={() => { setShowCatPicker(false); setPickerStep('cat'); }} className="text-2xl text-[#aaa] leading-none">×</button>
             </div>
-            <div className="overflow-y-auto flex-1 p-3">
-              {CATS.map(cat => (
-                <div key={cat.label}>
+
+            {pickerStep === 'cat' ? (
+              <div className="overflow-y-auto flex-1">
+                {CATS.map(cat => (
                   <button
-                    onClick={() => { setSelectedCat(cat); setSelectedSub(''); setShowCatPicker(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left hover:bg-[#fff5f0] transition-colors mb-1 ${selectedCat?.label === cat.label ? 'bg-[#fff5f0] border border-[#fde8de]' : ''}`}
+                    key={cat.label}
+                    onClick={() => { setSelectedCat(cat); setSelectedSub(''); setPickerStep('sub'); }}
+                    className={`w-full flex items-center gap-3 px-5 py-3.5 border-b border-[#f5f5f5] text-left hover:bg-[#faf5f2] transition-colors ${selectedCat?.label === cat.label ? 'bg-[#fff5f0]' : ''}`}
                   >
-                    <span className="text-2xl w-8 text-center">{cat.emoji}</span>
+                    <span className="text-2xl w-8 text-center flex-shrink-0">{cat.emoji}</span>
                     <span className="text-[14px] font-semibold flex-1">{cat.label}</span>
-                    {selectedCat?.label === cat.label && <span className="text-[#d94f1e]">✓</span>}
+                    <span className="text-[#ccc]">›</span>
                   </button>
-                  {selectedCat?.label === cat.label && cat.subs && (
-                    <div className="ml-11 mb-2 space-y-1">
-                      {cat.subs.map(sub => (
-                        <button
-                          key={sub}
-                          onClick={() => { setSelectedSub(sub); setShowCatPicker(false); }}
-                          className={`w-full text-left text-[13px] px-3 py-2 rounded-lg transition-colors ${selectedSub === sub ? 'bg-[#d94f1e] text-white font-semibold' : 'text-[#555] hover:bg-[#f5f0ed]'}`}
-                        >{sub}</button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-y-auto flex-1">
+                {selectedCat?.subs.map((sub: any) => (
+                  <button
+                    key={sub.name}
+                    onClick={() => { setSelectedSub(sub.name); setShowCatPicker(false); setPickerStep('cat'); }}
+                    className={`w-full flex items-center gap-3 px-5 py-3.5 border-b border-[#f5f5f5] text-left hover:bg-[#faf5f2] transition-colors ${selectedSub === sub.name ? 'bg-[#fff5f0]' : ''}`}
+                  >
+                    <span className="text-xl w-8 text-center flex-shrink-0">{sub.icon}</span>
+                    <span className="text-[14px] font-semibold flex-1">{sub.name}</span>
+                    {selectedSub === sub.name && <span className="text-[#d94f1e]">✓</span>}
+                  </button>
+                ))}
+                {/* Other catch-all */}
+                <button
+                  onClick={() => { setSelectedSub(''); setShowCatPicker(false); setPickerStep('cat'); }}
+                  className={`w-full flex items-center gap-3 px-5 py-3.5 border-b border-[#f5f5f5] text-left hover:bg-[#faf5f2] transition-colors ${!selectedSub ? 'bg-[#fff5f0]' : ''}`}
+                >
+                  <span className="text-xl w-8 text-center flex-shrink-0">📦</span>
+                  <div className="flex-1">
+                    <div className="text-[14px] font-semibold">Other / Not listed</div>
+                    <div className="text-[11px] text-[#aaa]">Just use the description to explain what you're selling</div>
+                  </div>
+                  {!selectedSub && <span className="text-[#d94f1e]">✓</span>}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
