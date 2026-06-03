@@ -115,16 +115,18 @@ function PostAdPage() {
   if (authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-[#eef2f5]" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="min-h-screen bg-[#f0f4f7]" style={{ fontFamily: 'Inter, sans-serif' }}>
 
       {/* ── NAV ── */}
-      <nav className="bg-[#d94f1e] h-14 flex items-center px-4 gap-3 sticky top-0 z-50 shadow-md">
+      <nav className="bg-white border-b border-[#e5e5e5] h-14 flex items-center px-4 gap-3 sticky top-0 z-50">
         <button onClick={() => navigate({ to: '/' })} className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-white text-base">🛍️</div>
-          <span className="text-white text-lg font-black">souq<span className="text-white/80">SS</span></span>
+          <div className="w-8 h-8 bg-[#1a1a1a] rounded-lg flex items-center justify-center text-base">🛍️</div>
+          <span className="text-[#1a1a1a] text-lg font-black">souq<span className="text-[#d94f1e]">SS</span></span>
         </button>
-        <div className="flex-1" />
-        <button onClick={() => navigate({ to: '/' })} className="text-white/80 text-[13px] font-semibold hover:text-white">Cancel</button>
+        <div className="flex-1 text-center">
+          <span className="text-[15px] font-bold text-[#1a1a1a]">Post ad</span>
+        </div>
+        <button onClick={() => navigate({ to: '/' })} className="text-[#d94f1e] text-[14px] font-semibold">Cancel</button>
       </nav>
 
       {/* ── DONE STATE ── */}
@@ -147,16 +149,15 @@ function PostAdPage() {
       {step === 'form' && (
         <div className="max-w-[600px] mx-auto px-4 py-5">
 
-          {/* Page title */}
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-[18px] font-extrabold">Post ad</h1>
-            <button onClick={() => { setTitle(''); setDesc(''); setPrice(''); setCond(''); setImages([]); setSelectedCat(null); }} className="text-[#d94f1e] text-[14px] font-semibold">Clear</button>
+          {/* Clear button row */}
+          <div className="flex items-center justify-end mb-3">
+            <button onClick={() => { setTitle(''); setDesc(''); setPrice(''); setCond(''); setImages([]); setSelectedCat(null); setSelectedSub(''); setCity(''); }} className="text-[#d94f1e] text-[13px] font-semibold">Clear all</button>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-[#e8e8e8]">
 
             {/* Title */}
-            <div className="p-5 border-b border-[#f0f0f0]">
+            <div className="px-5 py-3.5 border-b border-[#f0f0f0]">
               <div className="flex justify-between items-center mb-2">
                 <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide">Title *</label>
                 <span className={`text-[12px] font-semibold ${titleLen > 60 ? 'text-red-500' : 'text-[#aaa]'}`}>{titleLen} / 70</span>
@@ -203,7 +204,7 @@ function PostAdPage() {
             </button>
 
             {/* Photos */}
-            <div className="p-5 border-b border-[#f0f0f0]">
+            <div className="px-5 py-3.5 border-b border-[#f0f0f0]">
               <div className="text-[13px] font-bold mb-1">Add photos</div>
               <p className="text-[12px] text-[#aaa] mb-3">
                 <span className="text-[#d94f1e] font-semibold">First picture is the title picture.</span> Up to 8 photos · JPG or PNG · Max 10MB each
@@ -229,19 +230,19 @@ function PostAdPage() {
             </div>
 
             {/* Description */}
-            <div className="p-5 border-b border-[#f0f0f0]">
+            <div className="px-5 py-3.5 border-b border-[#f0f0f0]">
               <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-2">Description</label>
               <textarea
                 className={inp + ' resize-y min-h-[120px]'}
                 placeholder="Describe your item — condition, age, specs, reason for selling…"
                 value={desc}
                 onChange={e => setDesc(e.target.value)}
-                rows={4}
+                rows={3}
               />
             </div>
 
             {/* Price */}
-            <div className="p-5 border-b border-[#f0f0f0]">
+            <div className="px-5 py-3.5 border-b border-[#f0f0f0]">
               <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-2">Price (SSP)</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#aaa] font-semibold text-[14px]">SSP</span>
@@ -265,7 +266,7 @@ function PostAdPage() {
             </div>
 
             {/* Condition */}
-            <div className="p-5 border-b border-[#f0f0f0]">
+            <div className="px-5 py-3.5 border-b border-[#f0f0f0]">
               <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-3">Condition</label>
               <div className="space-y-2">
                 {CONDITIONS.map(c => (
@@ -302,11 +303,11 @@ function PostAdPage() {
           <button
             onClick={handleSubmit}
             disabled={!canNext || submitting}
-            className="w-full mt-4 bg-[#d94f1e] text-white rounded-xl py-4 text-[16px] font-bold disabled:opacity-40 hover:bg-[#c04418] transition-colors shadow-lg"
+            className="w-full mt-4 bg-[#d94f1e] text-white rounded-xl py-4 text-[16px] font-bold disabled:opacity-30 disabled:bg-[#b0b8c0] disabled:cursor-not-allowed hover:bg-[#c04418] transition-colors"
           >
-            {submitting ? 'Posting your ad…' : 'Post Ad — Go Live Now 🚀'}
+            {submitting ? 'Posting…' : canNext ? 'Post Ad Now' : 'Next'}
           </button>
-          <p className="text-center text-[12px] text-[#aaa] mt-3">By posting you agree to SouqSS <span className="underline cursor-pointer">Terms of Use</span></p>
+          <p className="text-center text-[11px] text-[#bbb] mt-2">By posting you agree to SouqSS <span className="underline cursor-pointer">Terms of Use</span></p>
         </div>
       )}
 
