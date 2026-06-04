@@ -1,54 +1,51 @@
-import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import type { Listing } from '@/lib/types';
 import { AuthModal } from '@/components/AuthModal';
 import { ListingModal } from '@/components/ListingModal';
-import { PostAdModal } from '@/components/PostAdModal';
 import { SafetyTips } from '@/components/SafetyTips';
 import { MyListings } from '@/components/MyListings';
 import { SavedListings } from '@/components/SavedListings';
 import { BottomNav } from '@/components/BottomNav';
-import { SearchBar } from '@/components/SearchBar';
-import { useToast, Toast } from '@/components/Toast';
 import { NotificationsBell } from '@/components/NotificationsBell';
 import { SellerProfile } from '@/components/SellerProfile';
 import { BoostModal } from '@/components/BoostModal';
+import { useToast, Toast } from '@/components/Toast';
 
 export const Route = createFileRoute('/')({
   component: Home,
   head: () => ({
     meta: [
-      { title: 'SouqSS — Buy & Sell in South Sudan' },
-      { name: 'description', content: "South Sudan's #1 marketplace. Buy and sell phones, cars, property, fashion and more." },
+      { title: "SouqSS — Buy & Sell in South Sudan" },
+      { name: 'description', content: "South Sudan's #1 marketplace." },
       { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1' },
     ],
     links: [
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
-      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap' },
+      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Unbounded:wght@700;900&display=swap' },
     ],
   }),
 });
 
-const CATEGORIES = [
-  { name: 'All', icon: '🌍' },
-  { name: 'Real Estate', icon: '🏠', count: '4.8k' },
-  { name: 'Electronics', icon: '💻', count: '6.0k' },
-  { name: 'Vehicles', icon: '🚗', count: '12.8k' },
-  { name: 'Fashion', icon: '👗', count: '6.6k' },
-  { name: 'Home & Furniture', icon: '🛋️', count: '7.0k' },
-  { name: 'Jobs', icon: '💼', count: '2.4k' },
-  { name: 'Services', icon: '🔧', count: '3.1k' },
-  { name: 'Food & Groceries', icon: '🍽️', count: '3.6k' },
+const CATS = [
+  { name: 'Real Estate', icon: '🏠', count: '4,800' },
+  { name: 'Electronics', icon: '💻', count: '6,000' },
+  { name: 'Vehicles', icon: '🚗', count: '12,800' },
+  { name: 'Fashion', icon: '👗', count: '6,600' },
+  { name: 'Home & Furniture', icon: '🛋️', count: '7,000' },
+  { name: 'Jobs', icon: '💼', count: '2,400' },
+  { name: 'Services', icon: '🔧', count: '3,100' },
+  { name: 'Food & Groceries', icon: '🍎', count: '3,600' },
   { name: 'Pets', icon: '🐾', count: '612' },
-  { name: 'Beauty & Care', icon: '💄', count: '2.8k' },
-  { name: 'Industrial', icon: '⚙️', count: '1.9k' },
+  { name: 'Beauty & Care', icon: '💄', count: '2,800' },
+  { name: 'Industrial', icon: '⚙️', count: '1,900' },
 ];
 
-const CITIES = ['All South Sudan', 'Juba', 'Wau', 'Malakal', 'Yei', 'Aweil', 'Bor', 'Rumbek'];
-const QUICK_CHIPS = ['📱 iPhone', '🚗 Toyota', '🏠 Apartment', '☀️ Solar Panel', '⚡ Generator', '💻 MacBook'];
+const CITIES = ['All South Sudan','Juba','Wau','Malakal','Yei','Aweil','Bor','Rumbek'];
+const QUICK_CHIPS = ['📱 iPhone','🚗 Toyota','🏠 Apartment','⚡ Solar Panel','🔋 Generator','💻 MacBook'];
 const PAGE_SIZE = 12;
 const SORT_OPTIONS = [
   { label: 'Newest first', value: 'newest' },
@@ -57,57 +54,56 @@ const SORT_OPTIONS = [
   { label: 'Most viewed', value: 'views' },
 ];
 
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
+function timeAgo(d: string) {
+  const diff = Date.now() - new Date(d).getTime();
   const m = Math.floor(diff / 60000);
   if (m < 1) return 'just now';
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d ago`;
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  return `${Math.floor(h / 24)}d ago`;
 }
 
-function ListingCard({ listing: L, onOpen, onToggleSave, saved }: {
-  listing: Listing; onOpen: (l: Listing) => void;
-  onToggleSave: (id: string) => void; saved: boolean;
-}) {
+function AdCard({ L, onOpen, onToggleSave, saved }: { L: Listing; onOpen: (l: Listing) => void; onToggleSave: (id: string) => void; saved: boolean }) {
+  const images: string[] = (L as any).images || [];
+  const hasImg = images.length > 0;
+
   const bgMap: Record<string, string> = {
-    'bg-peach': '#fde8de', 'bg-sky': '#ddeef8', 'bg-mint': '#ddf0e8',
-    'bg-lav': '#ede8f5', 'bg-sun': '#fef3d8', 'bg-rose': '#fde8e8',
-    'bg-sage': '#e8f0e8', 'bg-cream': '#f5f0e8', 'bg-steel': '#e8edf5',
+    'bg-peach':'#fde8de','bg-sky':'#ddeef8','bg-mint':'#ddf0e8',
+    'bg-lav':'#ede8f5','bg-sun':'#fef3d8','bg-rose':'#fde8e8',
+    'bg-sage':'#e8f0e8','bg-cream':'#f5f0e8','bg-steel':'#e8edf5',
   };
+
   return (
     <div
       onClick={() => onOpen(L)}
-      className="bg-white rounded-2xl overflow-hidden border border-[#e5ddd8] cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.98]"
+      style={{ breakInside: 'avoid', marginBottom: 14 }}
+      className="bg-white rounded-xl overflow-hidden border border-[#ede8e3] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_10px_28px_rgba(0,0,0,.1)] transition-all duration-200 block"
     >
-      <div className="h-36 sm:h-44 flex items-center justify-center relative" style={{ background: bgMap[L.bg_color || 'bg-peach'] || '#fde8de' }}>
-        <span className="text-5xl sm:text-6xl">{L.emoji || '🛒'}</span>
-        {L.is_premium && (
-          <span className="absolute top-2 left-2 bg-[#1a1a1a] text-white text-[9px] font-bold rounded-full px-2 py-0.5 flex items-center gap-0.5">⭐ PREMIUM</span>
+      <div className="relative overflow-hidden" style={{ background: hasImg ? undefined : (bgMap[L.bg_color||'bg-peach']||'#fde8de') }}>
+        {hasImg ? (
+          <img src={images[0]} alt={L.title} className="w-full block object-cover transition-transform duration-300 hover:scale-[1.04]" style={{ maxHeight: 260 }} />
+        ) : (
+          <div className="flex items-center justify-center" style={{ height: 180, fontSize: 64 }}>{L.emoji || '🛒'}</div>
         )}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
+          {L.is_verified && <span className="text-[10.5px] px-2 py-1 rounded-md font-semibold flex items-center gap-1 bg-[rgba(232,68,10,.9)] text-white backdrop-blur-sm">✓ Verified</span>}
+          {L.is_premium && <span className="text-[10.5px] px-2 py-1 rounded-md font-semibold bg-[rgba(26,18,8,.85)] text-white backdrop-blur-sm">⭐ Premium</span>}
+        </div>
         <button
           onClick={e => { e.stopPropagation(); onToggleSave(L.id); }}
-          className="absolute top-2 right-2 bg-white rounded-full w-7 h-7 flex items-center justify-center shadow-md hover:scale-110 transition-transform text-sm"
-        >{saved ? '❤️' : '🔖'}</button>
-        {L.is_verified && (
-          <span className="absolute bottom-2 left-2 bg-white rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-sm">
-            <span className="text-green-500">✓</span> Verified
-          </span>
-        )}
+          className="absolute top-2 right-2 w-7 h-7 bg-[rgba(255,255,255,.9)] rounded-full flex items-center justify-center text-sm hover:scale-125 transition-transform"
+        >{saved ? '❤️' : '🤍'}</button>
       </div>
-      <div className="p-3">
-        <div className="text-[16px] font-extrabold text-[#d94f1e] leading-none mb-1">{L.price_label}</div>
-        <div className="text-[12px] font-semibold text-[#1a1a1a] line-clamp-2 leading-snug mb-2">{L.title}</div>
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-[#aaa] truncate max-w-[100px]">📍 {L.location}</span>
-          <span className="text-[10px] text-[#aaa]">{timeAgo(L.created_at)}</span>
+      <div className="p-[10px_12px_13px]">
+        <div className="text-[15px] font-extrabold text-[#1a1208] mb-0.5">{L.price_label}</div>
+        <div className="text-[12.5px] text-[#5a4e44] leading-snug mb-1.5 line-clamp-2">{L.title}</div>
+        <div className="flex flex-wrap gap-1 mb-2">
+          <span className="text-[11px] bg-[#f7f4f1] px-2 py-0.5 rounded-[5px] text-[#5a4e44] border border-[#ede8e3]">{L.condition}</span>
         </div>
-        <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-[#f5f0ed]">
-          <span className="text-[10px] font-bold bg-[#f5f0ed] text-[#777] rounded-full px-2 py-0.5">{L.condition}</span>
-          <span className="text-[10px] text-[#aaa]">👁 {L.views ?? 0}</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1 text-[11.5px] text-[#9a8e84]">📍 {L.location}</div>
+          <div className="text-[11px] text-[#9a8e84]">{timeAgo(L.created_at)}</div>
         </div>
       </div>
     </div>
@@ -116,8 +112,8 @@ function ListingCard({ listing: L, onOpen, onToggleSave, saved }: {
 
 function Home() {
   const { user } = useAuth();
-  const { msg: toastMsg, toast } = useToast();
   const navigate = useNavigate();
+  const { msg: toastMsg, toast } = useToast();
 
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,6 +126,7 @@ function Home() {
   const [searchInput, setSearchInput] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [activeTab, setActiveTab] = useState('All');
   const [filterOpen, setFilterOpen] = useState(false);
 
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -137,43 +134,34 @@ function Home() {
 
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [postOpen, setPostOpen] = useState(false);
   const [safetyOpen, setSafetyOpen] = useState(false);
   const [myListingsOpen, setMyListingsOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
-  const [bottomNav, setBottomNav] = useState<'home'|'search'|'post'|'saved'|'profile'>('home');
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [sellerProfileId, setSellerProfileId] = useState<string | null>(null);
   const [boostListing, setBoostListing] = useState<Listing | null>(null);
+  const [bottomNav, setBottomNav] = useState<'home'|'search'|'post'|'saved'|'profile'>('home');
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
-  const filterRef = useRef<{ category?: string; search?: string; minPrice?: number; maxPrice?: number; city?: string; sort?: string }>({});
+  const filterRef = useRef<any>({});
   const searchDebounce = useRef<ReturnType<typeof setTimeout>>();
 
   const loadListings = useCallback(async (filter = filterRef.current, reset = true) => {
     setLoading(true);
     const start = reset ? 0 : offset;
-
-    let q = supabase
-      .from('listings')
-      .select('*, profiles(full_name, phone, rating, review_count, verified, member_since)')
-      .eq('status', 'active');
-
+    let q = supabase.from('listings').select('*, profiles(full_name, phone, rating, review_count, verified, member_since)').eq('status','active');
     if (filter.category && filter.category !== 'All') q = q.eq('category', filter.category);
     if (filter.city && filter.city !== 'All South Sudan') q = q.ilike('location', `%${filter.city}%`);
     if (filter.search) q = q.or(`title.ilike.%${filter.search}%,description.ilike.%${filter.search}%,location.ilike.%${filter.search}%,category.ilike.%${filter.search}%`);
     if (filter.minPrice) q = q.gte('price', filter.minPrice);
     if (filter.maxPrice) q = q.lte('price', filter.maxPrice);
-
     const sort = filter.sort || 'newest';
     if (sort === 'newest') q = q.order('created_at', { ascending: false });
     else if (sort === 'price_asc') q = q.order('price', { ascending: true });
     else if (sort === 'price_desc') q = q.order('price', { ascending: false });
     else if (sort === 'views') q = q.order('views', { ascending: false });
-
     q = q.range(start, start + PAGE_SIZE - 1);
     const { data } = await q;
     const rows = (data || []) as Listing[];
-
     setListings(prev => reset ? rows : [...prev, ...rows]);
     setHasMore(rows.length === PAGE_SIZE);
     setOffset(start + rows.length);
@@ -185,17 +173,11 @@ function Home() {
   useEffect(() => {
     if (!user) { setSavedIds(new Set()); return; }
     supabase.from('saved_listings').select('listing_id').eq('user_id', user.id)
-      .then(({ data }) => setSavedIds(new Set((data || []).map((r: any) => r.listing_id))));
+      .then(({ data }) => setSavedIds(new Set((data||[]).map((r:any) => r.listing_id))));
   }, [user?.id]);
 
-  const applyFilters = (overrides: Record<string, any> = {}) => {
-    const f = {
-      ...filterRef.current,
-      search: searchInput || undefined,
-      minPrice: minPrice ? parseFloat(minPrice) : undefined,
-      maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-      ...overrides,
-    };
+  const applyFilters = (overrides: any = {}) => {
+    const f = { ...filterRef.current, search: searchInput||undefined, minPrice: minPrice?parseFloat(minPrice):undefined, maxPrice: maxPrice?parseFloat(maxPrice):undefined, ...overrides };
     filterRef.current = f;
     loadListings(f, true);
   };
@@ -203,13 +185,13 @@ function Home() {
   const handleSearch = (q: string) => {
     clearTimeout(searchDebounce.current);
     searchDebounce.current = setTimeout(() => {
-      filterRef.current = { ...filterRef.current, search: q || undefined };
+      filterRef.current = { ...filterRef.current, search: q||undefined };
       loadListings(filterRef.current, true);
     }, 300);
   };
 
   const handleCat = (cat: string) => {
-    setActiveCat(cat);
+    setActiveCat(cat); setActiveTab(cat);
     filterRef.current = { ...filterRef.current, category: cat === 'All' ? undefined : cat };
     loadListings(filterRef.current, true);
     setMobileSearchOpen(false);
@@ -251,136 +233,174 @@ function Home() {
   const userInitial = user?.user_metadata?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?';
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
 
-  return (
-    <div className="min-h-screen bg-[#f2ede9] pb-20 lg:pb-0" style={{ fontFamily: 'Inter, sans-serif' }}>
+  const CSS = `
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --orange:#E8440A;--orange-dark:#c93a08;--orange-light:#fff1ec;
+      --dark:#1a1208;--dark2:#2c2218;--text:#1a1208;--text2:#5a4e44;--text3:#9a8e84;
+      --border:#ede8e3;--bg:#f7f4f1;--white:#fff;--r:12px;--topbar:#111;
+    }
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text)}
+    .ad-grid{columns:4;column-gap:14px}
+    @media(max-width:1100px){.ad-grid{columns:3}}
+    @media(max-width:900px){.ad-grid{columns:3}}
+    @media(max-width:600px){.ad-grid{columns:2}}
+    .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .rec-scroll,.banners,.nav-tabs-inner{scrollbar-width:none}
+    .rec-scroll::-webkit-scrollbar,.banners::-webkit-scrollbar,.nav-tabs-inner::-webkit-scrollbar{display:none}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(12px)}to{opacity:1;transform:none}}
+  `;
 
-      {/* ── TOP BAR (desktop only) ── */}
-      <div className="hidden lg:block bg-[#1a1a1a] text-white/60 text-xs py-1.5">
-        <div className="max-w-[1320px] mx-auto px-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span>🌍 South Sudan's #1 Marketplace</span>
-            <button onClick={() => setSafetyOpen(true)} className="flex items-center gap-1 hover:text-white transition-colors">🛡️ Safety Tips</button>
-          </div>
-          <div className="flex items-center gap-4">
-            {!user ? (
-              <>
-                <button onClick={() => { setAuthMode('signin'); setAuthOpen(true); }} className="hover:text-white transition-colors">Sign In</button>
-                <button onClick={() => { setAuthMode('signup'); setAuthOpen(true); }} className="text-[#d94f1e] font-bold hover:text-orange-400 transition-colors">Create Account</button>
-              </>
-            ) : (
-              <>
-                <button onClick={() => navigate({ to: '/profile' })} className="hover:text-white transition-colors">My Profile</button>
-                <button onClick={signOut} className="hover:text-white transition-colors">Sign Out</button>
-              </>
-            )}
-          </div>
+  return (
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f7f4f1', color: '#1a1208', minHeight: '100vh', paddingBottom: 80 }}>
+      <style>{CSS}</style>
+
+      {/* ── TOP BAR ── */}
+      <div style={{ background: '#111', padding: '7px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5, color: '#aaa' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4caf50', display: 'inline-block' }}></span>
+          South Sudan's #1 Marketplace
+        </div>
+        <div style={{ display: 'flex', gap: 16 }}>
+          <button onClick={() => setSafetyOpen(true)} style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 12.5 }}>🛡️ Safety Tips</button>
+          {!user ? (
+            <>
+              <button onClick={() => { setAuthMode('signin'); setAuthOpen(true); }} style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 12.5 }}>Sign In</button>
+              <button onClick={() => { setAuthMode('signup'); setAuthOpen(true); }} style={{ background: 'none', border: 'none', color: '#E8440A', cursor: 'pointer', fontSize: 12.5, fontWeight: 700 }}>Create Account</button>
+            </>
+          ) : (
+            <button onClick={signOut} style={{ background: 'none', border: 'none', color: '#ccc', cursor: 'pointer', fontSize: 12.5 }}>Sign Out</button>
+          )}
         </div>
       </div>
 
-      {/* ── MAIN NAV ── */}
-      <nav className="bg-white border-b border-[#e5ddd8] sticky top-0 z-[200] shadow-sm">
-        <div className="max-w-[1320px] mx-auto px-4 lg:px-6 flex items-center gap-3 h-[60px] lg:h-[68px]">
+      {/* ── HEADER ── */}
+      <header style={{ background: '#fff', borderBottom: '1px solid #ede8e3', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}>
+        <div style={{ maxWidth: 1280, margin: 'auto', padding: '0 20px', height: 66, display: 'flex', alignItems: 'center', gap: 16 }}>
           {/* Logo */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-9 h-9 lg:w-10 lg:h-10 bg-[#1a1a1a] rounded-[10px] flex items-center justify-center text-lg lg:text-xl">🛍️</div>
-            <span className="text-xl lg:text-2xl font-black tracking-tight">souq<span className="text-[#d94f1e]">SS</span></span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <div style={{ width: 40, height: 40, background: '#1a1208', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🛍️</div>
+            <span style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 20, fontWeight: 900, color: '#1a1208', letterSpacing: -1 }}>
+              souq<span style={{ color: '#E8440A' }}>SS</span>
+            </span>
           </div>
 
-          {/* Desktop search */}
-          <div className="hidden lg:flex flex-1 items-center bg-[#f5f0ed] border-2 border-transparent rounded-xl overflow-hidden focus-within:border-[#d94f1e] focus-within:bg-white transition-all">
-            <select
-              className="bg-transparent border-r border-[#e5ddd8] px-3 text-[13px] text-[#777] outline-none h-11 cursor-pointer"
-              onChange={e => handleCat(e.target.value)}
-              value={activeCat}
-            >
-              {CATEGORIES.map(c => <option key={c.name}>{c.name}</option>)}
-            </select>
-            <SearchBar
-              value={searchInput}
-              onChange={setSearchInput}
-              onSearch={handleSearch}
-              className="flex-1"
-            />
-          </div>
-
-          {/* Mobile: search icon + city */}
-          <button
-            className="lg:hidden flex items-center gap-1.5 flex-1 bg-[#f5f0ed] rounded-xl px-3 py-2 text-[13px] text-[#999]"
-            onClick={() => { setMobileSearchOpen(true); setBottomNav('search'); }}
+          {/* Search bar - desktop */}
+          <div className="hidden lg:flex" style={{ flex: 1, borderRadius: 10, overflow: 'hidden', border: '1.5px solid #ede8e3', background: '#fff', maxWidth: 600, transition: 'border-color .2s' }}
+            onFocus={e => (e.currentTarget.style.borderColor = '#E8440A')}
+            onBlur={e => (e.currentTarget.style.borderColor = '#ede8e3')}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            {searchInput || 'Search listings…'}
-          </button>
+            <select
+              value={activeCity}
+              onChange={e => handleCity(e.target.value)}
+              style={{ background: '#f7f4f1', border: 'none', padding: '0 14px', fontSize: 13, fontWeight: 600, color: '#5a4e44', cursor: 'pointer', borderRight: '1.5px solid #ede8e3', fontFamily: 'inherit', outline: 'none' }}
+            >
+              {CITIES.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <input
+              type="text"
+              placeholder="Search listings, brands, locations…"
+              style={{ flex: 1, border: 'none', padding: '0 14px', fontSize: 14, outline: 'none', fontFamily: 'inherit', background: 'transparent' }}
+              value={searchInput}
+              onChange={e => { setSearchInput(e.target.value); handleSearch(e.target.value); }}
+              onKeyDown={e => e.key === 'Enter' && handleSearch(searchInput)}
+            />
+            <button onClick={() => handleSearch(searchInput)} style={{ background: '#E8440A', border: 'none', padding: '0 20px', color: '#fff', cursor: 'pointer', fontSize: 17, transition: 'background .2s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#c93a08')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#E8440A')}
+            >🔍</button>
+          </div>
+
+          {/* Mobile search pill */}
+          <button
+            className="lg:hidden"
+            onClick={() => { setMobileSearchOpen(true); setBottomNav('search'); }}
+            style={{ flex: 1, background: '#f7f4f1', border: '1.5px solid #ede8e3', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#9a8e84', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}
+          >🔍 {searchInput || 'Search listings…'}</button>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+            <NotificationsBell user={user} onOpenListing={async (id) => {
+              const { data } = await supabase.from('listings').select('*, profiles(full_name, phone, rating, review_count, verified, member_since)').eq('id', id).single();
+              if (data) setSelectedListing(data as Listing);
+            }} />
             {!user ? (
               <button
                 onClick={() => { setAuthMode('signin'); setAuthOpen(true); }}
-                className="hidden sm:flex items-center gap-1.5 border-[1.5px] border-[#e5ddd8] bg-white rounded-[10px] px-3 py-2 text-[13px] font-semibold hover:border-[#d94f1e] hover:text-[#d94f1e] transition-colors"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Sign In
-              </button>
+                className="hidden sm:flex"
+                style={{ alignItems: 'center', gap: 6, background: '#f7f4f1', border: '1px solid #ede8e3', borderRadius: 9, padding: '0 16px', height: 40, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', color: '#1a1208' }}
+              >Sign In</button>
             ) : (
-              <button
-                onClick={() => navigate({ to: '/profile' })}
-                className="hidden sm:flex items-center gap-2 border-[1.5px] border-[#e5ddd8] bg-white rounded-[10px] px-3 py-2 text-[13px] font-semibold hover:border-[#d94f1e] transition-colors"
-              >
-                <div className="w-6 h-6 bg-[#d94f1e] rounded-full flex items-center justify-center text-white text-xs font-bold">{userInitial}</div>
-                <span className="hidden md:inline max-w-[80px] truncate">{userName}</span>
-              </button>
+              <div style={{ position: 'relative' }} className="hidden sm:block">
+                <div
+                  onClick={() => navigate({ to: '/profile' })}
+                  style={{ width: 40, height: 40, borderRadius: 9, background: '#E8440A', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+                >{userInitial}</div>
+              </div>
             )}
-            <NotificationsBell
-              user={user}
-              onOpenListing={async (id) => {
-                const { data } = await supabase.from('listings').select('*, profiles(full_name, phone, rating, review_count, verified, member_since)').eq('id', id).single();
-                if (data) setSelectedListing(data as Listing);
-              }}
-            />
             <button
               onClick={openPostAd}
-              className="bg-[#d94f1e] text-white rounded-[10px] px-3 lg:px-4 py-2 text-[13px] font-bold flex items-center gap-1 hover:bg-[#c04418] transition-colors"
+              style={{ background: '#E8440A', color: '#fff', border: 'none', padding: '0 20px', height: 40, borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, transition: 'background .2s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#c93a08')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#E8440A')}
             >＋ <span className="hidden sm:inline">Post Ad</span></button>
           </div>
         </div>
+      </header>
+
+      {/* ── NAV TABS ── */}
+      <nav style={{ background: '#fff', borderBottom: '1px solid #ede8e3' }}>
+        <div className="nav-tabs-inner" style={{ maxWidth: 1280, margin: 'auto', padding: '0 20px', display: 'flex', gap: 2, overflowX: 'auto' }}>
+          {[{ name: 'All', icon: '🌍' }, ...CATS].map(cat => (
+            <button
+              key={cat.name}
+              onClick={() => handleCat(cat.name)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7, padding: '12px 16px',
+                fontSize: 13.5, fontWeight: activeTab === cat.name ? 600 : 500,
+                color: activeTab === cat.name ? '#E8440A' : '#5a4e44',
+                cursor: 'pointer', borderBottom: `2px solid ${activeTab === cat.name ? '#E8440A' : 'transparent'}`,
+                whiteSpace: 'nowrap', transition: 'all .2s', background: 'none', border: 'none',
+                borderBottomWidth: 2, borderBottomStyle: 'solid',
+                fontFamily: 'inherit',
+              }}
+            ><span style={{ fontSize: 16 }}>{cat.icon}</span>{cat.name}</button>
+          ))}
+        </div>
       </nav>
 
-      {/* ── MOBILE SEARCH SHEET ── */}
+      {/* ── MOBILE SEARCH OVERLAY ── */}
       {mobileSearchOpen && (
         <div className="fixed inset-0 bg-white z-[400] lg:hidden flex flex-col">
-          <div className="flex items-center gap-3 p-4 border-b border-[#f0ebe6]">
-            <button onClick={() => { setMobileSearchOpen(false); setBottomNav('home'); }} className="text-2xl text-[#aaa]">←</button>
-            <SearchBar
-              value={searchInput}
-              onChange={setSearchInput}
-              onSearch={q => { handleSearch(q); setMobileSearchOpen(false); setBottomNav('home'); }}
-              className="flex-1"
+          <div className="flex items-center gap-3 p-4 border-b border-[#ede8e3]">
+            <button onClick={() => { setMobileSearchOpen(false); setBottomNav('home'); }} className="text-2xl text-[#9a8e84]">←</button>
+            <input
               autoFocus
+              type="text"
+              placeholder="Search listings…"
+              className="flex-1 bg-[#f7f4f1] rounded-xl px-4 py-3 text-[14px] outline-none"
+              value={searchInput}
+              onChange={e => { setSearchInput(e.target.value); handleSearch(e.target.value); }}
+              onKeyDown={e => { if (e.key === 'Enter') { setMobileSearchOpen(false); setBottomNav('home'); } }}
             />
           </div>
-          {/* City filter */}
-          <div className="p-4 border-b border-[#f0ebe6]">
-            <div className="text-[11px] font-bold text-[#999] uppercase tracking-wide mb-2">City</div>
+          <div className="p-4 border-b border-[#ede8e3]">
+            <div className="text-[11px] font-bold text-[#9a8e84] uppercase tracking-wide mb-2">City</div>
             <div className="flex flex-wrap gap-2">
               {CITIES.map(city => (
-                <button
-                  key={city}
-                  onClick={() => { handleCity(city); setMobileSearchOpen(false); setBottomNav('home'); }}
-                  className={`px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-colors ${activeCity === city ? 'bg-[#d94f1e] text-white border-[#d94f1e]' : 'border-[#e5ddd8] text-[#555]'}`}
+                <button key={city} onClick={() => { handleCity(city); setMobileSearchOpen(false); setBottomNav('home'); }}
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-colors ${activeCity === city ? 'bg-[#E8440A] text-white border-[#E8440A]' : 'border-[#ede8e3] text-[#5a4e44]'}`}
                 >{city}</button>
               ))}
             </div>
           </div>
-          {/* Category filter */}
           <div className="p-4 overflow-y-auto">
-            <div className="text-[11px] font-bold text-[#999] uppercase tracking-wide mb-2">Category</div>
+            <div className="text-[11px] font-bold text-[#9a8e84] uppercase tracking-wide mb-2">Category</div>
             <div className="grid grid-cols-3 gap-2">
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat.name}
-                  onClick={() => { handleCat(cat.name); setMobileSearchOpen(false); setBottomNav('home'); }}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-colors ${activeCat === cat.name ? 'border-[#d94f1e] bg-[#fff5f0] text-[#d94f1e]' : 'border-[#e5ddd8]'}`}
+              {[{ name: 'All', icon: '🌍' }, ...CATS].map(cat => (
+                <button key={cat.name} onClick={() => { handleCat(cat.name); setMobileSearchOpen(false); setBottomNav('home'); }}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-colors ${activeCat === cat.name ? 'border-[#E8440A] bg-[#fff1ec] text-[#E8440A]' : 'border-[#ede8e3]'}`}
                 >
                   <span className="text-2xl">{cat.icon}</span>
                   <span className="text-[10px] font-semibold text-center leading-tight">{cat.name}</span>
@@ -391,177 +411,163 @@ function Home() {
         </div>
       )}
 
-      {/* ── CATEGORY NAV (desktop) ── */}
-      <div className="hidden lg:block bg-white border-b border-[#e5ddd8] overflow-x-auto">
-        <div className="max-w-[1320px] mx-auto px-6">
-          <div className="flex whitespace-nowrap">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat.name}
-                onClick={() => handleCat(cat.name)}
-                className={`flex items-center gap-1.5 px-4 py-3.5 text-[13px] font-semibold border-b-2 transition-colors flex-shrink-0 ${activeCat === cat.name ? 'border-[#d94f1e] text-[#d94f1e]' : 'border-transparent text-[#555] hover:text-[#d94f1e]'}`}
-              >{cat.icon} {cat.name}</button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* ── HERO ── */}
-      <div className="bg-gradient-to-br from-[#1e4e1e] to-[#2d6e2d] py-8 lg:py-12 px-4 lg:px-6">
-        <div className="max-w-[700px] mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-3 py-1 text-[11px] font-bold text-white mb-3 tracking-wide">
-            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-            SOUTH SUDAN'S #1 MARKETPLACE
-          </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-2 leading-tight">
-            Buy & Sell Anything in<br /><span className="text-[#fde8de]">South Sudan</span>
-          </h1>
-          <p className="text-white/70 text-[14px] mb-5 hidden sm:block">From Juba to every state — phones, cars, homes, jobs and more.</p>
-
-          {/* Hero search — desktop */}
-          <div className="hidden sm:flex items-center bg-white rounded-2xl overflow-hidden shadow-xl mb-4 max-w-[580px] mx-auto">
-            <select
-              className="bg-transparent border-r border-[#e5ddd8] px-3 py-4 text-[13px] text-[#777] outline-none cursor-pointer"
-              onChange={e => handleCity(e.target.value)}
-              value={activeCity}
-            >
-              {CITIES.map(c => <option key={c}>{c}</option>)}
-            </select>
-            <input
-              type="text"
-              placeholder="What are you looking for?"
-              className="flex-1 px-4 py-4 text-[14px] outline-none"
-              value={searchInput}
-              onChange={e => { setSearchInput(e.target.value); handleSearch(e.target.value); }}
-              onKeyDown={e => e.key === 'Enter' && handleSearch(searchInput)}
-            />
-            <button
-              onClick={() => handleSearch(searchInput)}
-              className="bg-[#d94f1e] text-white px-6 py-4 text-[14px] font-bold hover:bg-[#c04418] transition-colors flex-shrink-0"
-            >Search</button>
-          </div>
-
-          {/* Quick chips */}
-          <div className="flex flex-wrap justify-center gap-2">
-            {QUICK_CHIPS.map(chip => (
-              <button
-                key={chip}
-                onClick={() => {
-                  const q = chip.replace(/^[^\w]+/, '').split(' ')[0];
-                  setSearchInput(q);
-                  handleSearch(q);
-                  setTimeout(() => document.getElementById('listings-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
-                }}
-                className="bg-white/20 hover:bg-white/30 text-white text-[11px] sm:text-[12px] font-semibold rounded-full px-3 py-1.5 border border-white/30 transition-colors"
-              >{chip}</button>
-            ))}
-          </div>
+      <div style={{ background: 'linear-gradient(135deg,#1a1208 0%,#2c1a0a 45%,#3d2410 100%)', padding: '44px 20px 36px', textAlign: 'center', color: '#fff', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 80% at 50% 120%,rgba(232,68,10,.35) 0%,transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.15)', borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 600, letterSpacing: .5, textTransform: 'uppercase', marginBottom: 18, backdropFilter: 'blur(6px)' }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4caf50', animation: 'pulse 2s infinite', display: 'inline-block' }}></span>
+          South Sudan's #1 Marketplace
+        </div>
+        <h1 style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 'clamp(22px,5vw,32px)', fontWeight: 900, lineHeight: 1.15, marginBottom: 8 }}>
+          Buy & Sell Anything in<br /><span style={{ color: '#E8440A' }}>South Sudan</span>
+        </h1>
+        <p style={{ color: 'rgba(255,255,255,.65)', fontSize: 15, marginBottom: 28 }}>From Juba to every state — phones, cars, homes, jobs and more.</p>
+        <div className="hidden sm:flex" style={{ maxWidth: 620, margin: '0 auto 20px', borderRadius: 14, overflow: 'hidden', background: '#fff', boxShadow: '0 6px 30px rgba(0,0,0,.35)' }}>
+          <button onClick={() => {}} style={{ background: '#f5f2ef', border: 'none', padding: '0 18px', fontSize: 13, fontWeight: 600, color: '#5a4e44', cursor: 'pointer', borderRight: '1.5px solid #ede8e3', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
+            📍 {activeCity} ▾
+          </button>
+          <input
+            style={{ flex: 1, border: 'none', padding: 16, fontSize: 15, outline: 'none', fontFamily: 'inherit' }}
+            placeholder="What are you looking for?"
+            value={searchInput}
+            onChange={e => { setSearchInput(e.target.value); handleSearch(e.target.value); }}
+            onKeyDown={e => e.key === 'Enter' && handleSearch(searchInput)}
+          />
+          <button onClick={() => handleSearch(searchInput)} style={{ background: '#E8440A', border: 'none', padding: '0 28px', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Search</button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 8 }}>
+          {QUICK_CHIPS.map(chip => (
+            <button key={chip} onClick={() => { const q = chip.replace(/^[^\w]+/,'').split(' ')[0]; setSearchInput(q); handleSearch(q); setTimeout(() => document.getElementById('listings-section')?.scrollIntoView({ behavior: 'smooth' }), 100); }}
+              style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.18)', color: 'rgba(255,255,255,.85)', padding: '6px 14px', borderRadius: 20, fontSize: 13, cursor: 'pointer', transition: 'all .2s', backdropFilter: 'blur(4px)', fontFamily: 'inherit' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#E8440A'; e.currentTarget.style.borderColor = '#E8440A'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.18)'; e.currentTarget.style.color = 'rgba(255,255,255,.85)'; }}
+            >{chip}</button>
+          ))}
         </div>
       </div>
 
-      {/* ── BODY ── */}
-      <div className="max-w-[1320px] mx-auto px-4 lg:px-6 py-5 flex gap-5">
+      {/* ── MAIN LAYOUT ── */}
+      <div style={{ maxWidth: 1280, margin: 'auto', padding: '0 20px' }}>
+        <div style={{ display: 'flex', gap: 24, marginTop: 28 }}>
 
-        {/* ── SIDEBAR (desktop) ── */}
-        <aside className="w-[240px] flex-shrink-0 hidden lg:flex flex-col gap-4">
-          {/* Categories */}
-          <div className="bg-white rounded-2xl border border-[#e5ddd8] overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#f5f0ed]">
-              <span className="text-[13px] font-bold">Categories</span>
-              <button onClick={() => handleCat('All')} className="text-[#d94f1e] text-[12px] font-semibold hover:underline">All</button>
-            </div>
-            {CATEGORIES.slice(1).map(cat => (
-              <button
-                key={cat.name}
-                onClick={() => handleCat(cat.name)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 border-b border-[#faf5f3] last:border-0 hover:bg-[#fdf7f5] transition-colors text-left ${activeCat === cat.name ? 'bg-[#fff5f0]' : ''}`}
-              >
-                <span className="text-lg w-6 text-center flex-shrink-0">{cat.icon}</span>
-                <span className="flex-1 text-[13px] font-semibold">{cat.name}</span>
-                <span className="text-[11px] text-[#777] bg-[#f5f0ed] rounded-full px-2 py-0.5">{cat.count}</span>
-              </button>
-            ))}
-          </div>
+          {/* ── SIDEBAR ── */}
+          <aside className="hidden lg:flex flex-col" style={{ width: 260, flexShrink: 0 }}>
 
-          {/* City filter */}
-          <div className="bg-white rounded-2xl border border-[#e5ddd8] p-4">
-            <div className="text-[12px] font-bold text-[#999] uppercase tracking-wide mb-3">City</div>
-            <div className="space-y-1">
-              {CITIES.map(city => (
-                <button
-                  key={city}
-                  onClick={() => handleCity(city)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-[13px] font-semibold transition-colors ${activeCity === city ? 'bg-[#fff5f0] text-[#d94f1e]' : 'hover:bg-[#f5f0ed] text-[#555]'}`}
-                >{city}</button>
+            {/* Categories */}
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #ede8e3', overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ padding: '12px 16px', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#9a8e84', borderBottom: '1px solid #ede8e3' }}>Categories</div>
+              {CATS.map(cat => (
+                <div key={cat.name} onClick={() => handleCat(cat.name)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', cursor: 'pointer', transition: 'background .15s', borderBottom: '1px solid #f5f2ef', background: activeCat === cat.name ? '#fff1ec' : undefined }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#fff1ec')}
+                  onMouseLeave={e => (e.currentTarget.style.background = activeCat === cat.name ? '#fff1ec' : '')}
+                >
+                  <div style={{ width: 34, height: 34, borderRadius: 9, background: '#fff1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{cat.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 500 }}>{cat.name}</div>
+                    <div style={{ fontSize: 11.5, color: '#9a8e84', marginTop: 1 }}>{cat.count} ads</div>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#ede8e3' }}>›</div>
+                </div>
               ))}
             </div>
-          </div>
 
-          {/* Price filter */}
-          <div className="bg-white rounded-2xl border border-[#e5ddd8] p-4">
-            <div className="text-[12px] font-bold text-[#999] uppercase tracking-wide mb-3">Price (SSP)</div>
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              <input type="number" placeholder="Min" className="bg-[#f5f0ed] rounded-[10px] px-3 py-2 text-[13px] outline-none w-full focus:ring-2 focus:ring-[#d94f1e]" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
-              <input type="number" placeholder="Max" className="bg-[#f5f0ed] rounded-[10px] px-3 py-2 text-[13px] outline-none w-full focus:ring-2 focus:ring-[#d94f1e]" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
-            </div>
-            <button onClick={() => applyFilters()} className="w-full bg-[#d94f1e] text-white rounded-[10px] py-2.5 text-[13px] font-bold hover:bg-[#c04418] transition-colors">Apply Filter</button>
-          </div>
-
-          {/* Safety tips */}
-          <button onClick={() => setSafetyOpen(true)} className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-left hover:bg-amber-100 transition-colors">
-            <div className="text-lg mb-1">🛡️</div>
-            <div className="text-[13px] font-bold text-amber-900">Stay Safe</div>
-            <div className="text-[12px] text-amber-700 mt-0.5">Tips for safe buying & selling</div>
-          </button>
-
-          {/* Seller CTA */}
-          <div className="bg-gradient-to-br from-[#1a1a1a] to-[#2d2d2d] rounded-2xl p-5 text-white">
-            <div className="text-[11px] font-bold text-[#d94f1e] uppercase tracking-wide mb-2">Free to sell</div>
-            <div className="text-[14px] font-bold mb-1">Start selling today</div>
-            <p className="text-white/50 text-[12px] mb-4">No fees, no commissions.</p>
-            <button onClick={openPostAd} className="w-full bg-[#d94f1e] text-white rounded-xl py-2.5 text-[13px] font-bold hover:bg-[#c04418] transition-colors">＋ Post an Ad</button>
-          </div>
-        </aside>
-
-        {/* ── MAIN ── */}
-        <main className="flex-1 min-w-0 flex flex-col gap-4">
-
-          {/* Promo banner */}
-          <div className="bg-gradient-to-r from-[#1e4e1e] to-[#2d6e2d] rounded-2xl p-5 lg:p-7 flex items-center justify-between gap-4">
-            <div>
-              <div className="inline-flex items-center gap-1.5 bg-white/20 rounded-full px-2.5 py-1 text-[10px] font-bold text-white mb-2">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span> NEW THIS WEEK
+            {/* City */}
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #ede8e3', overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ padding: '12px 16px', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#9a8e84', borderBottom: '1px solid #ede8e3' }}>City</div>
+              <div style={{ padding: '8px 0' }}>
+                {CITIES.map(city => (
+                  <div key={city} onClick={() => handleCity(city)}
+                    style={{ padding: '9px 16px', fontSize: 13.5, cursor: 'pointer', transition: 'background .15s', borderRadius: 6, margin: '0 6px', background: activeCity === city ? '#fff1ec' : undefined, color: activeCity === city ? '#E8440A' : undefined, fontWeight: activeCity === city ? 600 : undefined }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#fff1ec')}
+                    onMouseLeave={e => (e.currentTarget.style.background = activeCity === city ? '#fff1ec' : '')}
+                  >{city}</div>
+                ))}
               </div>
-              <h2 className="text-[16px] lg:text-xl font-extrabold text-white mb-1">🌱 Fresh produce now available</h2>
-              <p className="text-white/70 text-[12px] lg:text-[14px] hidden sm:block">Order direct from Yei, Torit & Nimule farms — delivery to Juba.</p>
             </div>
-            <button onClick={() => handleCat('Food & Groceries')} className="bg-white text-[#1a1a1a] rounded-full px-4 lg:px-6 py-2.5 text-[12px] lg:text-[14px] font-bold whitespace-nowrap flex-shrink-0 hover:opacity-90 transition-opacity">
-              Shop Now →
-            </button>
-          </div>
 
-          {/* Listings header with sort + filter */}
-          <div id="listings-section">
-            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-5 bg-[#d94f1e] rounded-full"></div>
-                <h2 className="text-[16px] font-extrabold">
-                  {activeCat === 'All' ? 'Fresh Listings' : activeCat}
-                  {activeCity !== 'All South Sudan' && <span className="text-[#777] font-semibold text-[14px]"> in {activeCity}</span>}
-                </h2>
+            {/* Price */}
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #ede8e3', marginBottom: 16 }}>
+              <div style={{ padding: '12px 16px', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#9a8e84', borderBottom: '1px solid #ede8e3' }}>Price (SSP)</div>
+              <div style={{ padding: '14px 16px' }}>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                  <input type="number" placeholder="Min" value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{ flex: 1, border: '1.5px solid #ede8e3', borderRadius: 8, padding: '8px 10px', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} onFocus={e => (e.currentTarget.style.borderColor='#E8440A')} onBlur={e => (e.currentTarget.style.borderColor='#ede8e3')} />
+                  <input type="number" placeholder="Max" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{ flex: 1, border: '1.5px solid #ede8e3', borderRadius: 8, padding: '8px 10px', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} onFocus={e => (e.currentTarget.style.borderColor='#E8440A')} onBlur={e => (e.currentTarget.style.borderColor='#ede8e3')} />
+                </div>
+                <button onClick={() => applyFilters()} style={{ width: '100%', background: '#E8440A', color: '#fff', border: 'none', padding: 10, borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Apply Filter</button>
               </div>
-              <div className="flex items-center gap-2">
-                {/* Mobile filter button */}
-                <button
-                  onClick={() => setFilterOpen(!filterOpen)}
-                  className="lg:hidden flex items-center gap-1.5 border border-[#e5ddd8] bg-white rounded-lg px-3 py-1.5 text-[12px] font-semibold"
-                >⚙️ Filter</button>
-                {/* Sort */}
-                <select
-                  value={sortBy}
-                  onChange={e => handleSort(e.target.value)}
-                  className="border border-[#e5ddd8] bg-white rounded-lg px-3 py-1.5 text-[12px] font-semibold outline-none cursor-pointer"
+            </div>
+
+            {/* Safety */}
+            <div onClick={() => setSafetyOpen(true)} style={{ background: '#fffbf5', border: '1px solid #fde8c0', borderRadius: 12, padding: '14px 16px', cursor: 'pointer', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: 14, marginBottom: 5 }}>🛡️ Stay Safe</div>
+              <p style={{ fontSize: 12.5, color: '#9a8e84', lineHeight: 1.5 }}>Tips for safe buying & selling. <span style={{ color: '#E8440A', fontWeight: 600 }}>Read more →</span></p>
+            </div>
+
+            {/* Sell CTA */}
+            <div style={{ background: '#1a1208', borderRadius: 12, padding: '18px 16px', color: '#fff' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#E8440A', marginBottom: 6 }}>Free to sell</div>
+              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Start selling today</h3>
+              <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,.55)', marginBottom: 14 }}>No fees, no commissions.</p>
+              <button onClick={openPostAd} style={{ background: '#E8440A', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>＋ Post an Ad</button>
+            </div>
+          </aside>
+
+          {/* ── MAIN CONTENT ── */}
+          <main style={{ flex: 1, minWidth: 0 }}>
+
+            {/* Promo card */}
+            <div style={{ background: 'linear-gradient(135deg,#1a2c18,#2a3d28)', borderRadius: 14, padding: '22px 24px', color: '#fff', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#7ddd6a', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4caf50', display: 'inline-block' }}></span>
+                  New this week
+                </div>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 5 }}>🌱 Fresh produce now available</h3>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,.6)' }}>Order direct from Yei, Torit & Nimule farms — delivery to Juba.</p>
+              </div>
+              <button onClick={() => handleCat('Food & Groceries')} style={{ background: '#fff', color: '#1a1208', border: 'none', padding: '10px 20px', borderRadius: 20, fontWeight: 700, fontSize: 13.5, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', flexShrink: 0 }}>Shop Now →</button>
+            </div>
+
+            {/* Quick banners */}
+            <div className="banners" style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, marginBottom: 24 }}>
+              {[
+                { cls: 'banner-sell', icon: '📤', title: 'How to Sell', bg: '#fff8f5', border: '#ffc4b0', iconBg: '#ffeae0' },
+                { cls: 'banner-buy', icon: '🛒', title: 'How to Buy', bg: '#f5f8ff', border: '#b8caff', iconBg: '#e0eaff' },
+                { cls: 'banner-top', icon: '🔥', title: 'Top Deals Today', bg: '#fffbf0', border: '#ffd880', iconBg: '#fff2c0' },
+                { cls: 'banner-fresh', icon: '✨', title: 'New Listings', bg: '#f5fbf0', border: '#b0dda0', iconBg: '#d8f0cc' },
+              ].map(b => (
+                <div key={b.title} onClick={() => b.title === 'New Listings' ? loadListings({},true) : null} style={{ flexShrink: 0, width: 155, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, border: `1.5px solid ${b.border}`, background: b.bg, transition: 'transform .2s, box-shadow .2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,.1)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
                 >
+                  <div style={{ width: 46, height: 46, borderRadius: 12, background: b.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{b.icon}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>{b.title}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Category icon row */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
+              {[{ icon: '➕', name: 'Post Ad', action: openPostAd }, ...CATS.map(c => ({ icon: c.icon, name: c.name, action: () => handleCat(c.name) }))].map(item => (
+                <button key={item.name} onClick={item.action} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 10px', background: '#fff', borderRadius: 12, cursor: 'pointer', border: '1.5px solid #ede8e3', transition: 'all .2s', minWidth: 78, fontFamily: 'inherit' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#E8440A'; e.currentTarget.style.background = '#fff1ec'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#ede8e3'; e.currentTarget.style.background = '#fff'; }}
+                >
+                  <div style={{ width: 44, height: 44, borderRadius: 11, background: '#fff1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21 }}>{item.icon}</div>
+                  <span style={{ fontSize: 11, fontWeight: 500, textAlign: 'center', color: '#5a4e44', maxWidth: 78, lineHeight: 1.3 }}>{item.name}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Listings header */}
+            <div id="listings-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+              <h2 style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 16, fontWeight: 700 }}>
+                {activeCat === 'All' ? 'Fresh Listings' : activeCat}
+                {activeCity !== 'All South Sudan' && <span style={{ color: '#9a8e84', fontFamily: 'inherit', fontSize: 13, fontWeight: 500 }}> in {activeCity}</span>}
+              </h2>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button className="lg:hidden" onClick={() => setFilterOpen(!filterOpen)} style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1.5px solid #ede8e3', background: '#fff', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>⚙️ Filter</button>
+                <select value={sortBy} onChange={e => handleSort(e.target.value)} style={{ border: '1.5px solid #ede8e3', background: '#fff', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, outline: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                   {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
@@ -569,90 +575,95 @@ function Home() {
 
             {/* Mobile filter panel */}
             {filterOpen && (
-              <div className="lg:hidden bg-white rounded-2xl border border-[#e5ddd8] p-4 mb-4">
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <input type="number" placeholder="Min price (SSP)" className="bg-[#f5f0ed] rounded-[10px] px-3 py-2.5 text-[13px] outline-none w-full" value={minPrice} onChange={e => setMinPrice(e.target.value)} />
-                  <input type="number" placeholder="Max price (SSP)" className="bg-[#f5f0ed] rounded-[10px] px-3 py-2.5 text-[13px] outline-none w-full" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
+              <div className="lg:hidden" style={{ background: '#fff', borderRadius: 12, border: '1px solid #ede8e3', padding: 16, marginBottom: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                  <input type="number" placeholder="Min price (SSP)" value={minPrice} onChange={e => setMinPrice(e.target.value)} style={{ border: '1.5px solid #ede8e3', borderRadius: 10, padding: '10px 12px', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+                  <input type="number" placeholder="Max price (SSP)" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} style={{ border: '1.5px solid #ede8e3', borderRadius: 10, padding: '10px 12px', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
                 </div>
-                <button onClick={() => { applyFilters(); setFilterOpen(false); toast('Filter applied'); }} className="w-full bg-[#d94f1e] text-white rounded-[10px] py-2.5 text-[13px] font-bold">Apply Filter</button>
+                <button onClick={() => { applyFilters(); setFilterOpen(false); toast('Filter applied'); }} style={{ width: '100%', background: '#E8440A', color: '#fff', border: 'none', padding: 10, borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Apply Filter</button>
               </div>
             )}
 
-            {/* Grid */}
+            {/* Ad Grid */}
             {loading && listings.length === 0 ? (
-              <div className="text-center py-16 text-[#aaa]">
-                <div className="text-4xl mb-3">⏳</div>
-                <div className="font-semibold">Loading listings…</div>
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9a8e84' }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>⏳</div>
+                <div style={{ fontWeight: 600 }}>Loading listings…</div>
               </div>
             ) : listings.length === 0 ? (
-              <div className="text-center py-16 text-[#aaa]">
-                <div className="text-4xl mb-3">🔍</div>
-                <div className="text-[15px] font-semibold mb-1">No listings found</div>
-                <div className="text-[13px] mb-4">Try a different search, city, or category</div>
-                <button
-                  onClick={() => { setActiveCat('All'); setActiveCity('All South Sudan'); setSearchInput(''); filterRef.current = {}; loadListings({}, true); }}
-                  className="bg-[#d94f1e] text-white rounded-xl px-5 py-2.5 font-bold text-[13px]"
-                >Show all listings</button>
+              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <div style={{ fontSize: 52, marginBottom: 12, opacity: .4 }}>🔍</div>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>No listings found</h3>
+                <p style={{ color: '#9a8e84', marginBottom: 20 }}>Try a different search, city, or category</p>
+                <button onClick={() => { setActiveCat('All'); setActiveTab('All'); setActiveCity('All South Sudan'); setSearchInput(''); filterRef.current = {}; loadListings({}, true); }} style={{ background: '#E8440A', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Show all listings</button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="ad-grid">
                 {listings.map(L => (
-                  <ListingCard key={L.id} listing={L} onOpen={setSelectedListing} onToggleSave={toggleSave} saved={savedIds.has(L.id)} />
+                  <AdCard key={L.id} L={L} onOpen={setSelectedListing} onToggleSave={toggleSave} saved={savedIds.has(L.id)} />
                 ))}
               </div>
             )}
 
+            {/* Load more */}
             {hasMore && listings.length > 0 && (
-              <div className="text-center mt-5">
-                <button
-                  onClick={() => loadListings(filterRef.current, false)}
-                  disabled={loading}
-                  className="border-[1.5px] border-[#e5ddd8] bg-white rounded-xl px-8 py-3 text-[14px] font-bold hover:border-[#d94f1e] hover:text-[#d94f1e] transition-colors disabled:opacity-50"
+              <div style={{ textAlign: 'center', marginTop: 24 }}>
+                <button onClick={() => loadListings(filterRef.current, false)} disabled={loading}
+                  style={{ border: '1.5px solid #ede8e3', background: '#fff', borderRadius: 12, padding: '12px 36px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#E8440A'; e.currentTarget.style.color = '#E8440A'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#ede8e3'; e.currentTarget.style.color = ''; }}
                 >{loading ? 'Loading…' : 'Load more listings →'}</button>
               </div>
             )}
-          </div>
 
-          {/* Seller CTA */}
-          <div className="bg-gradient-to-br from-[#2c1a0e] to-[#1a0f08] rounded-2xl p-6 lg:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-            <div>
-              <div className="text-[11px] font-bold text-[#d94f1e] uppercase tracking-wide mb-2">For Sellers</div>
-              <h2 className="text-[18px] font-extrabold text-white mb-2">Grow your business with SouqSS</h2>
-              <p className="text-white/50 text-[13px]">Free listings, no commissions, reach buyers across all of South Sudan.</p>
+            {/* Grow banner */}
+            <div style={{ background: '#1a1208', borderRadius: 14, padding: '28px 32px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, margin: '28px 0' }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#E8440A', marginBottom: 6 }}>For Sellers</div>
+                <h3 style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Grow your business with SouqSS</h3>
+                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,.55)' }}>Free listings, no commissions, reach buyers across all of South Sudan.</p>
+              </div>
+              <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+                <button onClick={openPostAd} style={{ background: '#E8440A', color: '#fff', border: 'none', padding: '11px 22px', borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>＋ Post an Ad</button>
+                <button onClick={() => { setAuthMode('signup'); setAuthOpen(true); }} style={{ background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,.3)', padding: '11px 22px', borderRadius: 9, fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Learn more</button>
+              </div>
             </div>
-            <div className="flex gap-3 flex-shrink-0">
-              <button onClick={openPostAd} className="bg-[#d94f1e] text-white rounded-xl px-5 py-3 text-[13px] font-bold whitespace-nowrap hover:bg-[#c04418] transition-colors">＋ Post an Ad</button>
-              <button onClick={() => { setAuthMode('signup'); setAuthOpen(true); }} className="border border-white/20 text-white rounded-xl px-5 py-3 text-[13px] font-semibold whitespace-nowrap hover:bg-white/10 transition-colors">Learn more</button>
-            </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-[#1a1a1a] text-white mt-6 hidden lg:block">
-        <div className="max-w-[1320px] mx-auto px-6 py-10 grid grid-cols-5 gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-[#d94f1e] rounded-[8px] flex items-center justify-center">🛍️</div>
-              <span className="text-lg font-black">souq<span className="text-[#d94f1e]">SS</span></span>
-            </div>
-            <p className="text-white/40 text-[12px] leading-relaxed">South Sudan's largest marketplace.</p>
-            <button onClick={() => setSafetyOpen(true)} className="mt-3 text-[12px] text-amber-400 hover:underline">🛡️ Safety Tips</button>
+      <footer className="hidden lg:block" style={{ background: '#111008', color: '#888', marginTop: 60 }}>
+        <div style={{ maxWidth: 1280, margin: 'auto', padding: '48px 20px 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={{ width: 36, height: 36, background: '#2c2218', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🛍️</div>
+            <span style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 19, fontWeight: 900, color: '#fff' }}>souq<span style={{ color: '#E8440A' }}>SS</span></span>
           </div>
-          {[
-            { title: 'Company', links: ['About SouqSS', 'Careers', 'Blog', 'Press'] },
-            { title: 'Buyers', links: ['How to Buy', 'Safety Tips', 'Buyer Protection'] },
-            { title: 'Sellers', links: ['How to Sell', 'Open a Shop', 'Seller Guidelines'] },
-            { title: 'Legal', links: ['Terms of Use', 'Privacy Policy', 'Report Abuse'] },
-          ].map(col => (
-            <div key={col.title}>
-              <h4 className="text-[12px] font-bold mb-3">{col.title}</h4>
-              {col.links.map(link => <div key={link} className="text-[12px] text-white/40 mb-1.5 hover:text-white cursor-pointer transition-colors">{link}</div>)}
-            </div>
-          ))}
-        </div>
-        <div className="border-t border-white/10 px-6 py-3 max-w-[1320px] mx-auto flex items-center justify-between text-[11px] text-white/30">
-          <span>© 2026 SouqSS Technologies Ltd. Made with ♥ in Juba, South Sudan.</span>
+          <div style={{ fontSize: 13, color: '#666', marginBottom: 8 }}>South Sudan's largest marketplace.</div>
+          <button onClick={() => setSafetyOpen(true)} style={{ background: 'none', border: 'none', color: '#E8440A', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>🛡️ Safety Tips</button>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr repeat(4,1fr)', gap: 32, margin: '36px 0 28px' }}>
+            <div />
+            {[
+              { title: 'Company', links: ['About SouqSS','Careers','Blog','Press'] },
+              { title: 'Buyers', links: ['How to Buy','Safety Tips','Buyer Protection'] },
+              { title: 'Sellers', links: ['How to Sell','Open a Shop','Seller Guidelines'] },
+              { title: 'Legal', links: ['Terms of Use','Privacy Policy','Report Abuse'] },
+            ].map(col => (
+              <div key={col.title}>
+                <h4 style={{ color: '#fff', fontSize: 13, fontWeight: 700, marginBottom: 14, textTransform: 'uppercase', letterSpacing: .5 }}>{col.title}</h4>
+                {col.links.map(link => <div key={link} style={{ fontSize: 13, color: '#666', marginBottom: 9, cursor: 'pointer', transition: 'color .2s' }} onMouseEnter={e => (e.currentTarget.style.color='#fff')} onMouseLeave={e => (e.currentTarget.style.color='#666')}>{link}</div>)}
+              </div>
+            ))}
+          </div>
+          <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,.07)', margin: '20px 0' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, color: '#555' }}>
+            <span>© 2026 SouqSS Technologies Ltd. Made with ♥ in Juba, South Sudan.</span>
+            <span style={{ display: 'flex', gap: 16 }}>
+              <span style={{ cursor: 'pointer' }}>Terms</span>
+              <span style={{ cursor: 'pointer' }}>Privacy</span>
+            </span>
+          </div>
         </div>
       </footer>
 
@@ -684,33 +695,11 @@ function Home() {
         onViewSeller={(id) => { setSelectedListing(null); setSellerProfileId(id); }}
         onBoost={(l) => { setSelectedListing(null); setBoostListing(l); }}
       />
-      <SellerProfile
-        sellerId={sellerProfileId}
-        onClose={() => setSellerProfileId(null)}
-        onOpenListing={(l) => { setSellerProfileId(null); setSelectedListing(l); }}
-        currentUser={user}
-      />
-      <BoostModal
-        listing={boostListing}
-        onClose={() => setBoostListing(null)}
-        user={user}
-        onSuccess={() => { toast('🚀 Boost activated!'); loadListings({}, true); }}
-      />
-      <PostAdModal
-        open={postOpen}
-        onClose={() => setPostOpen(false)}
-        user={user}
-        onSuccess={() => { toast('✓ Your listing is live!'); loadListings({}, true); }}
-      />
       <SafetyTips open={safetyOpen} onClose={() => setSafetyOpen(false)} />
       <MyListings open={myListingsOpen} onClose={() => setMyListingsOpen(false)} user={user} onOpenListing={setSelectedListing} />
-      <SavedListings
-        open={savedOpen}
-        onClose={() => setSavedOpen(false)}
-        user={user}
-        onOpenListing={setSelectedListing}
-        onAuthRequired={() => { setAuthMode('signin'); setAuthOpen(true); }}
-      />
+      <SavedListings open={savedOpen} onClose={() => setSavedOpen(false)} user={user} onOpenListing={setSelectedListing} onAuthRequired={() => { setAuthMode('signin'); setAuthOpen(true); }} />
+      <SellerProfile sellerId={sellerProfileId} onClose={() => setSellerProfileId(null)} onOpenListing={(l) => { setSellerProfileId(null); setSelectedListing(l); }} currentUser={user} />
+      <BoostModal listing={boostListing} onClose={() => setBoostListing(null)} user={user} onSuccess={() => { toast('🚀 Boost activated!'); loadListings({}, true); }} />
       <Toast message={toastMsg} onDone={() => {}} />
     </div>
   );
