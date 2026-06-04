@@ -31,17 +31,17 @@ export const Route = createFileRoute('/')({
 });
 
 const CATS = [
-  { name: 'Real Estate', icon: '🏠', count: '4,800' },
-  { name: 'Electronics', icon: '💻', count: '6,000' },
-  { name: 'Vehicles', icon: '🚗', count: '12,800' },
-  { name: 'Fashion', icon: '👗', count: '6,600' },
-  { name: 'Home & Furniture', icon: '🛋️', count: '7,000' },
-  { name: 'Jobs', icon: '💼', count: '2,400' },
-  { name: 'Services', icon: '🔧', count: '3,100' },
-  { name: 'Food & Groceries', icon: '🍎', count: '3,600' },
-  { name: 'Pets', icon: '🐾', count: '612' },
-  { name: 'Beauty & Care', icon: '💄', count: '2,800' },
-  { name: 'Industrial', icon: '⚙️', count: '1,900' },
+  { name: 'Real Estate', icon: '🏠' },
+  { name: 'Electronics', icon: '💻' },
+  { name: 'Vehicles', icon: '🚗' },
+  { name: 'Fashion', icon: '👗' },
+  { name: 'Home & Furniture', icon: '🛋️' },
+  { name: 'Jobs', icon: '💼' },
+  { name: 'Services', icon: '🔧' },
+  { name: 'Food & Groceries', icon: '🍎' },
+  { name: 'Pets', icon: '🐾' },
+  { name: 'Beauty & Care', icon: '💄' },
+  { name: 'Industrial', icon: '⚙️' },
 ];
 
 const CITIES = ['All South Sudan','Juba','Wau','Malakal','Yei','Aweil','Bor','Rumbek'];
@@ -286,32 +286,6 @@ function Home() {
             </span>
           </div>
 
-          {/* Search bar - desktop */}
-          <div className="hidden lg:flex" style={{ flex: 1, borderRadius: 10, overflow: 'hidden', border: '1.5px solid #ede8e3', background: '#fff', maxWidth: 600, transition: 'border-color .2s' }}
-            onFocus={e => (e.currentTarget.style.borderColor = '#E8440A')}
-            onBlur={e => (e.currentTarget.style.borderColor = '#ede8e3')}
-          >
-            <select
-              value={activeCity}
-              onChange={e => handleCity(e.target.value)}
-              style={{ background: '#f7f4f1', border: 'none', padding: '0 14px', fontSize: 13, fontWeight: 600, color: '#5a4e44', cursor: 'pointer', borderRight: '1.5px solid #ede8e3', fontFamily: 'inherit', outline: 'none' }}
-            >
-              {CITIES.map(c => <option key={c}>{c}</option>)}
-            </select>
-            <input
-              type="text"
-              placeholder="Search listings, brands, locations…"
-              style={{ flex: 1, border: 'none', padding: '0 14px', fontSize: 14, outline: 'none', fontFamily: 'inherit', background: 'transparent' }}
-              value={searchInput}
-              onChange={e => { setSearchInput(e.target.value); handleSearch(e.target.value); }}
-              onKeyDown={e => e.key === 'Enter' && handleSearch(searchInput)}
-            />
-            <button onClick={() => handleSearch(searchInput)} style={{ background: '#E8440A', border: 'none', padding: '0 20px', color: '#fff', cursor: 'pointer', fontSize: 17, transition: 'background .2s' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#c93a08')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#E8440A')}
-            >🔍</button>
-          </div>
-
           {/* Mobile search pill */}
           <button
             className="lg:hidden"
@@ -464,7 +438,7 @@ function Home() {
                   <div style={{ width: 34, height: 34, borderRadius: 9, background: '#fff1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{cat.icon}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13.5, fontWeight: 500 }}>{cat.name}</div>
-                    <div style={{ fontSize: 11.5, color: '#9a8e84', marginTop: 1 }}>{cat.count} ads</div>
+                    
                   </div>
                   <div style={{ fontSize: 12, color: '#ede8e3' }}>›</div>
                 </div>
