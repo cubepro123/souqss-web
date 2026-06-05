@@ -256,8 +256,8 @@ function Home() {
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f7f4f1', color: '#1a1208', minHeight: '100vh', paddingBottom: 80 }}>
       <style>{CSS}</style>
 
-      {/* ── TOP BAR ── */}
-      <div style={{ background: '#111', padding: '7px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5, color: '#aaa' }}>
+      {/* ── TOP BAR (desktop only) ── */}
+      <div className="hidden sm:flex" style={{ background: '#111', padding: '7px 20px', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5, color: '#aaa' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4caf50', display: 'inline-block' }}></span>
           South Sudan's #1 Marketplace
@@ -277,48 +277,56 @@ function Home() {
 
       {/* ── HEADER ── */}
       <header style={{ background: '#fff', borderBottom: '1px solid #ede8e3', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}>
-        <div style={{ maxWidth: 1280, margin: 'auto', padding: '0 20px', height: 66, display: 'flex', alignItems: 'center', gap: 16 }}>
+        {/* Mobile header */}
+        <div className="flex lg:hidden" style={{ padding: '0 14px', height: 58, alignItems: 'center', gap: 10 }}>
           {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <div style={{ width: 36, height: 36, background: '#1a1208', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🛍️</div>
+            <span style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 17, fontWeight: 900, color: '#1a1208', letterSpacing: -0.5 }}>
+              souq<span style={{ color: '#E8440A' }}>SS</span>
+            </span>
+          </div>
+          {/* Mobile search pill */}
+          <button
+            onClick={() => { setMobileSearchOpen(true); setBottomNav('search'); }}
+            style={{ flex: 1, background: '#f7f4f1', border: '1.5px solid #ede8e3', borderRadius: 22, padding: '9px 14px', fontSize: 13.5, color: '#9a8e84', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8 }}
+          >
+            <span style={{ fontSize: 15 }}>🔍</span>
+            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{searchInput || 'Search listings…'}</span>
+          </button>
+          {/* Notification bell */}
+          <NotificationsBell user={user} onOpenListing={async (id) => {
+            const { data } = await supabase.from('listings').select('*, profiles(full_name, phone, rating, review_count, verified, member_since)').eq('id', id).single();
+            if (data) setSelectedListing(data as Listing);
+          }} />
+        </div>
+
+        {/* Desktop header */}
+        <div className="hidden lg:flex" style={{ maxWidth: 1280, margin: 'auto', padding: '0 20px', height: 66, alignItems: 'center', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
             <div style={{ width: 40, height: 40, background: '#1a1208', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🛍️</div>
             <span style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 20, fontWeight: 900, color: '#1a1208', letterSpacing: -1 }}>
               souq<span style={{ color: '#E8440A' }}>SS</span>
             </span>
           </div>
-
-          {/* Mobile search pill */}
-          <button
-            className="lg:hidden"
-            onClick={() => { setMobileSearchOpen(true); setBottomNav('search'); }}
-            style={{ flex: 1, background: '#f7f4f1', border: '1.5px solid #ede8e3', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: '#9a8e84', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}
-          >🔍 {searchInput || 'Search listings…'}</button>
-
-          {/* Actions */}
+          <div style={{ flex: 1, borderRadius: 10, overflow: 'hidden', border: '1.5px solid #ede8e3', background: '#fff', maxWidth: 600, display: 'flex' }}>
+            <select value={activeCity} onChange={e => handleCity(e.target.value)} style={{ background: '#f7f4f1', border: 'none', padding: '0 14px', fontSize: 13, fontWeight: 600, color: '#5a4e44', cursor: 'pointer', borderRight: '1.5px solid #ede8e3', fontFamily: 'inherit', outline: 'none' }}>
+              {CITIES.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <input type="text" placeholder="Search listings, brands, locations…" style={{ flex: 1, border: 'none', padding: '0 14px', fontSize: 14, outline: 'none', fontFamily: 'inherit', background: 'transparent' }} value={searchInput} onChange={e => { setSearchInput(e.target.value); handleSearch(e.target.value); }} onKeyDown={e => e.key === 'Enter' && handleSearch(searchInput)} />
+            <button onClick={() => handleSearch(searchInput)} style={{ background: '#E8440A', border: 'none', padding: '0 20px', color: '#fff', cursor: 'pointer', fontSize: 17 }}>🔍</button>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
             <NotificationsBell user={user} onOpenListing={async (id) => {
               const { data } = await supabase.from('listings').select('*, profiles(full_name, phone, rating, review_count, verified, member_since)').eq('id', id).single();
               if (data) setSelectedListing(data as Listing);
             }} />
             {!user ? (
-              <button
-                onClick={() => { setAuthMode('signin'); setAuthOpen(true); }}
-                className="hidden sm:flex"
-                style={{ alignItems: 'center', gap: 6, background: '#f7f4f1', border: '1px solid #ede8e3', borderRadius: 9, padding: '0 16px', height: 40, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', color: '#1a1208' }}
-              >Sign In</button>
+              <button onClick={() => { setAuthMode('signin'); setAuthOpen(true); }} style={{ alignItems: 'center', gap: 6, background: '#f7f4f1', border: '1px solid #ede8e3', borderRadius: 9, padding: '0 16px', height: 40, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', color: '#1a1208', display: 'flex' }}>Sign In</button>
             ) : (
-              <div style={{ position: 'relative' }} className="hidden sm:block">
-                <div
-                  onClick={() => navigate({ to: '/profile' })}
-                  style={{ width: 40, height: 40, borderRadius: 9, background: '#E8440A', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
-                >{userInitial}</div>
-              </div>
+              <div onClick={() => navigate({ to: '/profile' })} style={{ width: 40, height: 40, borderRadius: 9, background: '#E8440A', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>{userInitial}</div>
             )}
-            <button
-              onClick={openPostAd}
-              style={{ background: '#E8440A', color: '#fff', border: 'none', padding: '0 20px', height: 40, borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, transition: 'background .2s' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#c93a08')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#E8440A')}
-            >＋ <span className="hidden sm:inline">Post Ad</span></button>
+            <button onClick={openPostAd} style={{ background: '#E8440A', color: '#fff', border: 'none', padding: '0 20px', height: 40, borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }} onMouseEnter={e => (e.currentTarget.style.background = '#c93a08')} onMouseLeave={e => (e.currentTarget.style.background = '#E8440A')}>＋ Post Ad</button>
           </div>
         </div>
       </header>
@@ -386,7 +394,7 @@ function Home() {
       )}
 
       {/* ── HERO ── */}
-      <div style={{ background: 'linear-gradient(135deg,#1a1208 0%,#2c1a0a 45%,#3d2410 100%)', padding: '44px 20px 36px', textAlign: 'center', color: '#fff', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(135deg,#1a1208 0%,#2c1a0a 45%,#3d2410 100%)', padding: '32px 16px 28px', textAlign: 'center', color: '#fff', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 80% at 50% 120%,rgba(232,68,10,.35) 0%,transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.15)', borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 600, letterSpacing: .5, textTransform: 'uppercase', marginBottom: 18, backdropFilter: 'blur(6px)' }}>
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4caf50', animation: 'pulse 2s infinite', display: 'inline-block' }}></span>
@@ -425,7 +433,7 @@ function Home() {
       </div>
 
       {/* ── MAIN LAYOUT ── */}
-      <div style={{ maxWidth: 1280, margin: 'auto', padding: '0 20px' }}>
+      <div style={{ maxWidth: 1280, margin: 'auto', padding: '0 12px' }}>
         <div style={{ display: 'flex', gap: 24, marginTop: 28 }}>
 
           {/* ── SIDEBAR ── */}
@@ -494,27 +502,29 @@ function Home() {
           <main style={{ flex: 1, minWidth: 0 }}>
 
             {/* Promo card */}
-            <div style={{ background: 'linear-gradient(135deg,#1a2c18,#2a3d28)', borderRadius: 14, padding: '22px 24px', color: '#fff', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#7ddd6a', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4caf50', display: 'inline-block' }}></span>
-                  New this week
+            <div style={{ background: 'linear-gradient(135deg,#1a2c18,#2a3d28)', borderRadius: 14, padding: '18px 18px', color: '#fff', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#7ddd6a', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4caf50', display: 'inline-block', flexShrink: 0 }}></span>
+                    New this week
+                  </div>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, lineHeight: 1.3 }}>🌱 Fresh produce now available</h3>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', lineHeight: 1.4 }}>Order from Yei, Torit & Nimule farms — delivery to Juba.</p>
                 </div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 5 }}>🌱 Fresh produce now available</h3>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,.6)' }}>Order direct from Yei, Torit & Nimule farms — delivery to Juba.</p>
+                <button onClick={() => handleCat('Food & Groceries')} style={{ background: '#fff', color: '#1a1208', border: 'none', padding: '9px 16px', borderRadius: 20, fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', flexShrink: 0, marginTop: 4 }}>Shop Now →</button>
               </div>
-              <button onClick={() => handleCat('Food & Groceries')} style={{ background: '#fff', color: '#1a1208', border: 'none', padding: '10px 20px', borderRadius: 20, fontWeight: 700, fontSize: 13.5, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit', flexShrink: 0 }}>Shop Now →</button>
             </div>
 
             {/* Quick banners */}
-            <div className="banners" style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, marginBottom: 24 }}>
+            <div className="banners" style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, marginBottom: 18, scrollbarWidth: 'none' }}>
               {[
                 { icon: '📤', title: 'Sell for Free', bg: '#fff8f5', border: '#ffc4b0', iconBg: '#ffeae0', action: () => openPostAd() },
                 { icon: '🔥', title: 'Top Deals', bg: '#fffbf0', border: '#ffd880', iconBg: '#fff2c0', action: () => { handleSort('views'); document.getElementById('listings-section')?.scrollIntoView({behavior:'smooth'}); } },
                 { icon: '✨', title: 'New Listings', bg: '#f5fbf0', border: '#b0dda0', iconBg: '#d8f0cc', action: () => { handleSort('newest'); document.getElementById('listings-section')?.scrollIntoView({behavior:'smooth'}); } },
                 { icon: '💰', title: 'Best Price', bg: '#f5f8ff', border: '#b8caff', iconBg: '#e0eaff', action: () => { handleSort('price_asc'); document.getElementById('listings-section')?.scrollIntoView({behavior:'smooth'}); } },
               ].map(b => (
-                <div key={b.title} onClick={b.action} style={{ flexShrink: 0, width: 155, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, border: `1.5px solid ${b.border}`, background: b.bg, transition: 'transform .2s, box-shadow .2s' }}
+                <div key={b.title} onClick={b.action} style={{ flexShrink: 0, width: 130, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, border: `1.5px solid ${b.border}`, background: b.bg, transition: 'transform .2s, box-shadow .2s' }}
                   onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,.1)'; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
                 >
@@ -525,20 +535,20 @@ function Home() {
             </div>
 
             {/* Category icon row */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
+            <div style={{ display: 'flex', overflowX: 'auto', gap: 8, marginBottom: 20, paddingBottom: 4, scrollbarWidth: 'none' }}>
               {[{ icon: '➕', name: 'Post Ad', action: openPostAd }, ...CATS.map(c => ({ icon: c.icon, name: c.name, action: () => handleCat(c.name) }))].map(item => (
-                <button key={item.name} onClick={item.action} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 10px', background: '#fff', borderRadius: 12, cursor: 'pointer', border: '1.5px solid #ede8e3', transition: 'all .2s', minWidth: 78, fontFamily: 'inherit' }}
+                <button key={item.name} onClick={item.action} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, padding: '10px 8px', background: '#fff', borderRadius: 12, cursor: 'pointer', border: '1.5px solid #ede8e3', transition: 'all .2s', minWidth: 70, flexShrink: 0, fontFamily: 'inherit' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#E8440A'; e.currentTarget.style.background = '#fff1ec'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = '#ede8e3'; e.currentTarget.style.background = '#fff'; }}
                 >
                   <div style={{ width: 44, height: 44, borderRadius: 11, background: '#fff1ec', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 21 }}>{item.icon}</div>
-                  <span style={{ fontSize: 11, fontWeight: 500, textAlign: 'center', color: '#5a4e44', maxWidth: 78, lineHeight: 1.3 }}>{item.name}</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, textAlign: 'center', color: '#5a4e44', maxWidth: 70, lineHeight: 1.3 }}>{item.name}</span>
                 </button>
               ))}
             </div>
 
             {/* Listings header */}
-            <div id="listings-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+            <div id="listings-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
               <h2 style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 16, fontWeight: 700 }}>
                 {activeCat === 'All' ? 'Fresh Listings' : activeCat}
                 {activeCity !== 'All South Sudan' && <span style={{ color: '#9a8e84', fontFamily: 'inherit', fontSize: 13, fontWeight: 500 }}> in {activeCity}</span>}
@@ -595,15 +605,13 @@ function Home() {
             )}
 
             {/* Grow banner */}
-            <div style={{ background: '#1a1208', borderRadius: 14, padding: '28px 32px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, margin: '28px 0' }}>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#E8440A', marginBottom: 6 }}>For Sellers</div>
-                <h3 style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Grow your business with SouqSS</h3>
-                <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,.55)' }}>Free listings, no commissions, reach buyers across all of South Sudan.</p>
-              </div>
-              <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
-                <button onClick={openPostAd} style={{ background: '#E8440A', color: '#fff', border: 'none', padding: '11px 22px', borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>＋ Post an Ad</button>
-                <button onClick={() => { setAuthMode('signup'); setAuthOpen(true); }} style={{ background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,.3)', padding: '11px 22px', borderRadius: 9, fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>Learn more</button>
+            <div style={{ background: '#1a1208', borderRadius: 14, padding: '22px 20px', color: '#fff', margin: '20px 0' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: '#E8440A', marginBottom: 6 }}>For Sellers</div>
+              <h3 style={{ fontFamily: "'Unbounded',sans-serif", fontSize: 16, fontWeight: 700, marginBottom: 6, lineHeight: 1.3 }}>Grow your business with SouqSS</h3>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,.55)', marginBottom: 16 }}>Free listings, no commissions, reach buyers across South Sudan.</p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={openPostAd} style={{ flex: 1, background: '#E8440A', color: '#fff', border: 'none', padding: '12px 16px', borderRadius: 9, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>＋ Post an Ad</button>
+                <button onClick={() => { setAuthMode('signup'); setAuthOpen(true); }} style={{ flex: 1, background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,.3)', padding: '12px 16px', borderRadius: 9, fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Learn more</button>
               </div>
             </div>
           </main>
