@@ -19,6 +19,11 @@ export function ListingModal({ listing: L, onClose, onAuthRequired, user, savedI
   const [sendingMsg, setSendingMsg] = useState(false);
   const [msgSent, setMsgSent] = useState(false);
   const [showMsgForm, setShowMsgForm] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportSent, setReportSent] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
   const [imgIdx, setImgIdx] = useState(0);
 
   useEffect(() => {
@@ -26,6 +31,7 @@ export function ListingModal({ listing: L, onClose, onAuthRequired, user, savedI
       setMsgBody(`Hi! I'm interested in your listing "${L.title}". Is it still available?`);
       setMsgSent(false); setShowMsgForm(false); setImgIdx(0);
       supabase.rpc('increment_views', { p_listing_id: L.id });
+      setShowReport(false); setReportReason(''); setReportDetails(''); setReportSent(false);
     }
   }, [L?.id]);
 
@@ -169,7 +175,37 @@ export function ListingModal({ listing: L, onClose, onAuthRequired, user, savedI
 
           {/* Report */}
           <div className="text-center mt-3">
-            <button className="text-[11px] text-[#ccc] hover:text-[#999] transition-colors">⚠️ Report this listing</button>
+            {!showReport ? (
+              <button onClick={() => { if (!user) { onAuthRequired(); return; } setShowReport(true); }} className="text-[11px] text-[#ccc] hover:text-red-400 transition-colors">⚠️ Report this listing</button>
+            ) : reportSent ? (
+              <div className="bg-green-50 text-green-700 text-[12px] font-semibold py-2 px-4 rounded-xl border border-green-200">✓ Report submitted. We'll review it within 24 hours.</div>
+            ) : (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-left">
+                <div className="text-[13px] font-bold text-red-700 mb-3">⚠️ Report this listing</div>
+                <div className="space-y-2 mb-3">
+                  {['Fake or scam listing','Wrong category','Prohibited item','Already sold','Offensive content','Other'].map(r => (
+                    <label key={r} className="flex items-center gap-2 cursor-pointer" onClick={() => setReportReason(r)}>
+                      <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${reportReason === r ? 'border-red-500' : 'border-[#ccc]'}`}>
+                        {reportReason === r && <div className="w-2 h-2 bg-red-500 rounded-full"/>}
+                      </div>
+                      <span className="text-[13px] text-[#555]">{r}</span>
+                    </label>
+                  ))}
+                </div>
+                <textarea rows={2} placeholder="Additional details (optional)" value={reportDetails} onChange={e => setReportDetails(e.target.value)} className="w-full bg-white border border-red-200 rounded-lg px-3 py-2 text-[12px] outline-none resize-none mb-3" />
+                <div className="flex gap-2">
+                  <button onClick={async () => {
+                    if (!reportReason || !user) return;
+                    setReportLoading(true);
+                    await supabase.from('reports').insert({ listing_id: L.id, reporter_id: user.id, reason: reportReason, details: reportDetails || null });
+                    setReportLoading(false); setReportSent(true);
+                  }} disabled={!reportReason || reportLoading} className="flex-1 bg-red-500 text-white rounded-lg py-2 text-[13px] font-bold disabled:opacity-50">
+                    {reportLoading ? 'Submitting…' : 'Submit Report'}
+                  </button>
+                  <button onClick={() => setShowReport(false)} className="px-4 border border-[#e5ddd8] rounded-lg text-[13px] text-[#777]">Cancel</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

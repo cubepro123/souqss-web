@@ -31,17 +31,17 @@ export const Route = createFileRoute('/')({
 });
 
 const CATS = [
-  { name: 'Real Estate', icon: '🏠' },
-  { name: 'Electronics', icon: '💻' },
+  { name: 'Electronics', icon: '📱' },
   { name: 'Vehicles', icon: '🚗' },
+  { name: 'Real Estate', icon: '🏠' },
   { name: 'Fashion', icon: '👗' },
   { name: 'Home & Furniture', icon: '🛋️' },
-  { name: 'Jobs', icon: '💼' },
-  { name: 'Services', icon: '🔧' },
   { name: 'Food & Groceries', icon: '🍎' },
+  { name: 'Industrial', icon: '⚙️' },
+  { name: 'Services', icon: '🔧' },
+  { name: 'Jobs', icon: '💼' },
   { name: 'Pets', icon: '🐾' },
   { name: 'Beauty & Care', icon: '💄' },
-  { name: 'Industrial', icon: '⚙️' },
 ];
 
 const CITIES = ['All South Sudan','Juba','Wau','Malakal','Yei','Aweil','Bor','Rumbek'];
@@ -397,9 +397,13 @@ function Home() {
         </h1>
         <p style={{ color: 'rgba(255,255,255,.65)', fontSize: 15, marginBottom: 28 }}>From Juba to every state — phones, cars, homes, jobs and more.</p>
         <div className="hidden sm:flex" style={{ maxWidth: 620, margin: '0 auto 20px', borderRadius: 14, overflow: 'hidden', background: '#fff', boxShadow: '0 6px 30px rgba(0,0,0,.35)' }}>
-          <button onClick={() => {}} style={{ background: '#f5f2ef', border: 'none', padding: '0 18px', fontSize: 13, fontWeight: 600, color: '#5a4e44', cursor: 'pointer', borderRight: '1.5px solid #ede8e3', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
-            📍 {activeCity} ▾
-          </button>
+          <select
+            value={activeCity}
+            onChange={e => handleCity(e.target.value)}
+            style={{ background: '#f5f2ef', border: 'none', padding: '0 18px', fontSize: 13, fontWeight: 600, color: '#5a4e44', cursor: 'pointer', borderRight: '1.5px solid #ede8e3', fontFamily: 'inherit', outline: 'none' }}
+          >
+            {CITIES.map(c => <option key={c}>{c}</option>)}
+          </select>
           <input
             style={{ flex: 1, border: 'none', padding: 16, fontSize: 15, outline: 'none', fontFamily: 'inherit' }}
             placeholder="What are you looking for?"
@@ -505,12 +509,12 @@ function Home() {
             {/* Quick banners */}
             <div className="banners" style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, marginBottom: 24 }}>
               {[
-                { cls: 'banner-sell', icon: '📤', title: 'How to Sell', bg: '#fff8f5', border: '#ffc4b0', iconBg: '#ffeae0' },
-                { cls: 'banner-buy', icon: '🛒', title: 'How to Buy', bg: '#f5f8ff', border: '#b8caff', iconBg: '#e0eaff' },
-                { cls: 'banner-top', icon: '🔥', title: 'Top Deals Today', bg: '#fffbf0', border: '#ffd880', iconBg: '#fff2c0' },
-                { cls: 'banner-fresh', icon: '✨', title: 'New Listings', bg: '#f5fbf0', border: '#b0dda0', iconBg: '#d8f0cc' },
+                { icon: '📤', title: 'Sell for Free', bg: '#fff8f5', border: '#ffc4b0', iconBg: '#ffeae0', action: () => openPostAd() },
+                { icon: '🔥', title: 'Top Deals', bg: '#fffbf0', border: '#ffd880', iconBg: '#fff2c0', action: () => { handleSort('views'); document.getElementById('listings-section')?.scrollIntoView({behavior:'smooth'}); } },
+                { icon: '✨', title: 'New Listings', bg: '#f5fbf0', border: '#b0dda0', iconBg: '#d8f0cc', action: () => { handleSort('newest'); document.getElementById('listings-section')?.scrollIntoView({behavior:'smooth'}); } },
+                { icon: '💰', title: 'Best Price', bg: '#f5f8ff', border: '#b8caff', iconBg: '#e0eaff', action: () => { handleSort('price_asc'); document.getElementById('listings-section')?.scrollIntoView({behavior:'smooth'}); } },
               ].map(b => (
-                <div key={b.title} onClick={() => b.title === 'New Listings' ? loadListings({},true) : null} style={{ flexShrink: 0, width: 155, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, border: `1.5px solid ${b.border}`, background: b.bg, transition: 'transform .2s, box-shadow .2s' }}
+                <div key={b.title} onClick={b.action} style={{ flexShrink: 0, width: 155, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, border: `1.5px solid ${b.border}`, background: b.bg, transition: 'transform .2s, box-shadow .2s' }}
                   onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,.1)'; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
                 >

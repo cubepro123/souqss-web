@@ -53,6 +53,11 @@ function ProfilePage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [pwMsg, setPwMsg] = useState('');
+  const [notifMessages, setNotifMessages] = useState(true);
+  const [notifSaves, setNotifSaves] = useState(true);
+  const [notifPriceDrops, setNotifPriceDrops] = useState(false);
+  const [notifPromotions, setNotifPromotions] = useState(false);
+  const [notifSaved, setNotifSaved] = useState(false);
   const [listingTab, setListingTab] = useState<'active' | 'sold'>('active');
 
   useEffect(() => {
@@ -77,6 +82,10 @@ function ProfilePage() {
     setFullName(prof?.full_name || '');
     setPhone(prof?.phone || '');
     setLocation(prof?.location || '');
+    setNotifMessages(prof?.notif_messages ?? true);
+    setNotifSaves(prof?.notif_saves ?? true);
+    setNotifPriceDrops(prof?.notif_price_drops ?? false);
+    setNotifPromotions(prof?.notif_promotions ?? false);
     setMyListings((l.data || []) as Listing[]);
     setSavedListings(((s.data || []).map((r: any) => r.listings).filter(Boolean)) as Listing[]);
     setMessages((m.data || []) as Message[]);
@@ -372,22 +381,30 @@ function ProfilePage() {
                 <div>
                   <h3 className="text-[15px] font-extrabold mb-4 flex items-center gap-2">🔔 Notification Preferences</h3>
                   <div className="space-y-3">
-                    {[
-                      ['Messages', 'Get notified when someone messages you'],
-                      ['Listing saves', 'Get notified when someone saves your listing'],
-                      ['Price drops', 'Get notified on saved listings with price drops'],
-                      ['Promotions', 'Receive SouqSS news and offers'],
-                    ].map(([label, desc]) => (
-                      <div key={label} className="flex items-center justify-between py-2">
+                    {([
+                      { key: 'messages', label: 'Messages', desc: 'Get notified when someone messages you', val: notifMessages, set: setNotifMessages },
+                      { key: 'saves', label: 'Listing saves', desc: 'Get notified when someone saves your listing', val: notifSaves, set: setNotifSaves },
+                      { key: 'price_drops', label: 'Price drops', desc: 'Get notified on saved listings with price drops', val: notifPriceDrops, set: setNotifPriceDrops },
+                      { key: 'promotions', label: 'Promotions', desc: 'Receive SouqSS news and offers', val: notifPromotions, set: setNotifPromotions },
+                    ] as const).map(item => (
+                      <div key={item.key} className="flex items-center justify-between py-2">
                         <div>
-                          <div className="text-[13px] font-semibold">{label}</div>
-                          <div className="text-[12px] text-[#aaa]">{desc}</div>
+                          <div className="text-[13px] font-semibold">{item.label}</div>
+                          <div className="text-[12px] text-[#aaa]">{item.desc}</div>
                         </div>
-                        <button className="w-11 h-6 bg-[#d94f1e] rounded-full relative flex-shrink-0">
-                          <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5 shadow-sm" />
+                        <button
+                          onClick={() => item.set(!item.val)}
+                          className={`w-11 h-6 rounded-full relative flex-shrink-0 transition-colors ${item.val ? 'bg-[#d94f1e]' : 'bg-[#ddd]'}`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${item.val ? 'right-0.5' : 'left-0.5'}`} />
                         </button>
                       </div>
                     ))}
+                  {notifSaved && <div className="text-[12px] text-green-600 font-semibold bg-green-50 px-3 py-2 rounded-lg border border-green-200">✓ Preferences saved!</div>}
+                  <button onClick={async () => {
+                    await supabase.from('profiles').update({ notif_messages: notifMessages, notif_saves: notifSaves, notif_price_drops: notifPriceDrops, notif_promotions: notifPromotions }).eq('id', user!.id);
+                    setNotifSaved(true); setTimeout(() => setNotifSaved(false), 2000);
+                  }} className="bg-[#d94f1e] text-white rounded-xl px-5 py-2.5 text-[13px] font-bold hover:bg-[#c04418] transition-colors">Save Preferences</button>
                   </div>
                 </div>
 
