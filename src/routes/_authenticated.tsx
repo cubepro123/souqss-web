@@ -9,9 +9,4 @@ export const Route = createFileRoute("/_authenticated")({
     }
   },
   component: () => <Outlet />,
-  head: () => ({
-    meta: [
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
 });

@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
-import { ListingImage } from "@/components/listing-image";
 
 export const Route = createFileRoute("/shops/$id")({
   component: ShopDetailPage,
@@ -18,7 +17,7 @@ export const Route = createFileRoute("/shops/$id")({
     const m = loaderData?.meta;
     const title = m ? `${m.name} — SouqSS` : "Shop — SouqSS";
     const desc = m?.description?.slice(0, 160) || (m?.shop_type === "service_provider" ? `${m?.service_category || "Service"} provider on SouqSS.` : "Shop on SouqSS.");
-    const url = `/shops/${params.id}`;
+    const url = `https://id-preview--fe57f89b-b050-4a85-9fd1-816a3abb1d39.lovable.app/shops/${params.id}`;
     return {
       meta: [
         { title },
@@ -27,12 +26,6 @@ export const Route = createFileRoute("/shops/$id")({
         { property: "og:description", content: desc },
         { property: "og:url", content: url },
         ...(m?.logo_url ? [{ property: "og:image", content: m.logo_url }] : []),
-        { name: "twitter:title", content: title },
-        { name: "twitter:description", content: desc },
-        ...(m?.logo_url ? [{ name: "twitter:image", content: m.logo_url }] : []),
-      ],
-      links: [
-        { rel: "canonical", href: url },
       ],
     };
   },
@@ -55,12 +48,7 @@ function ShopDetailPage() {
 
   useEffect(() => {
     setLoading(true);
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      const cols = user
-        ? "id,user_id,name,description,shop_type,service_category,city,phone,logo_url"
-        : "id,user_id,name,description,shop_type,service_category,city,logo_url";
-      const { data } = await (supabase.from("shops") as any).select(cols).eq("id", id).maybeSingle();
+    supabase.from("shops").select("*").eq("id", id).maybeSingle().then(async ({ data }) => {
       setShop(data as Shop | null);
       if (data) {
         const { data: ls } = await supabase.from("listings")
@@ -70,7 +58,7 @@ function ShopDetailPage() {
         setListings(ls || []);
       }
       setLoading(false);
-    })();
+    });
   }, [id]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
@@ -147,7 +135,7 @@ function ShopDetailPage() {
                   {filtered.map((l) => (
                     <Link key={l.id} to="/listings/$id" params={{ id: l.id }} className="bg-card border border-border hover:border-brand rounded-2xl overflow-hidden transition">
                       <div className="aspect-square bg-muted">
-                        <ListingImage src={l.images?.[0]} alt={l.title} />
+                        {l.images?.[0] ? <img src={l.images[0]} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>}
                       </div>
                       <div className="p-2.5">
                         <div className="font-bold text-[13px] line-clamp-2">{l.title}</div>

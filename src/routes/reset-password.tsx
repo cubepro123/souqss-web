@@ -5,13 +5,7 @@ import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/reset-password")({
   component: ResetPasswordPage,
-  head: () => ({
-    meta: [
-      { title: "Set new password — SouqSS" },
-      { name: "description", content: "Set a new password for your SouqSS account." },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Set new password — SouqSS" }] }),
 });
 
 function ResetPasswordPage() {

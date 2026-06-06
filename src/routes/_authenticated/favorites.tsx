@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import logo from "@/assets/logo.png";
-import { ListingImage } from "@/components/listing-image";
 
 export const Route = createFileRoute("/_authenticated/favorites")({
   component: Favorites,
@@ -75,7 +74,7 @@ function Favorites() {
                 <div key={r.listing_id} className="group bg-card rounded-2xl overflow-hidden border border-border relative">
                   <Link to="/listings/$id" params={{ id: l.id }}>
                     <div className="aspect-square bg-muted">
-                      <ListingImage src={l.images?.[0]} alt={l.title} />
+                      {l.images?.[0] ? <img src={l.images[0]} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-5xl">📦</div>}
                     </div>
                     <div className="p-3">
                       <div className="text-price font-extrabold text-[15px]">{l.currency} {l.price?.toLocaleString() ?? "—"}</div>
