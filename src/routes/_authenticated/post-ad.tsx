@@ -61,7 +61,7 @@ const CATS = [
     { name: 'Software', icon: '💿' },
     { name: 'Accessories & Supplies', icon: '🔌' },
   ]},
-  { label: 'Home, Furniture & Appliances', emoji: '🛋️', bg: 'bg-cream', subs: [
+  { label: 'Home & Furniture', emoji: '🛋️', bg: 'bg-cream', subs: [
     { name: 'Furniture', icon: '🛋️' },
     { name: 'Beds & Mattresses', icon: '🛏️' },
     { name: 'Home Appliances', icon: '🧺' },
@@ -91,7 +91,7 @@ const CATS = [
     { name: "Children's Clothing", icon: '🧒' },
     { name: "Children's Shoes", icon: '👟' },
   ]},
-  { label: 'Beauty & Personal Care', emoji: '💄', bg: 'bg-rose', subs: [
+  { label: 'Beauty & Care', emoji: '💄', bg: 'bg-rose', subs: [
     { name: 'Hair Beauty', icon: '💇' },
     { name: 'Face Care & Skincare', icon: '🧴' },
     { name: 'Body Care', icon: '🛁' },
@@ -129,7 +129,7 @@ const CATS = [
     { name: 'Rental Services', icon: '🔑' },
     { name: 'Other Services', icon: '🛠️' },
   ]},
-  { label: 'Repair & Construction', emoji: '⚙️', bg: 'bg-lav', subs: [
+  { label: 'Industrial', emoji: '⚙️', bg: 'bg-lav', subs: [
     { name: 'Generators', icon: '⚡' },
     { name: 'Solar & Renewable Energy', icon: '☀️' },
     { name: 'Inverters & Backup Batteries', icon: '🔋' },
@@ -144,7 +144,7 @@ const CATS = [
     { name: 'Welding & Industrial Equipment', icon: '⚙️' },
     { name: 'Other Repair & Construction', icon: '🏚️' },
   ]},
-  { label: 'Commercial Equipment', emoji: '🏭', bg: 'bg-steel', subs: [
+  { label: 'Industrial', emoji: '🏭', bg: 'bg-steel', subs: [
     { name: 'Medical Equipment & Supplies', icon: '🏥' },
     { name: 'Safety Equipment & Gear', icon: '🦺' },
     { name: 'Manufacturing Equipment', icon: '🏭' },
@@ -155,7 +155,7 @@ const CATS = [
     { name: 'Printing & Graphics Equipment', icon: '🖨️' },
     { name: 'Stage & Event Equipment', icon: '🎪' },
   ]},
-  { label: 'Animals & Pets', emoji: '🐾', bg: 'bg-sage', subs: [
+  { label: 'Pets', emoji: '🐾', bg: 'bg-sage', subs: [
     { name: 'Dogs & Puppies', icon: '🐕' },
     { name: 'Cats & Kittens', icon: '🐈' },
     { name: 'Birds', icon: '🦜' },
@@ -167,7 +167,7 @@ const CATS = [
     { name: 'Pet Services', icon: '💉' },
     { name: 'Other Animals', icon: '🐾' },
   ]},
-  { label: 'Food, Agriculture & Farming', emoji: '🥭', bg: 'bg-sage', subs: [
+  { label: 'Food & Groceries', emoji: '🥭', bg: 'bg-sage', subs: [
     { name: 'Food & Beverages', icon: '🍽️' },
     { name: 'Fresh Fruits & Vegetables', icon: '🥦' },
     { name: 'Grains & Cereals', icon: '🌾' },
@@ -177,7 +177,7 @@ const CATS = [
     { name: 'Farm Machinery & Equipment', icon: '🚜' },
     { name: 'Farm Animal Feed & Supplements', icon: '🌽' },
   ]},
-  { label: 'Leisure & Activities', emoji: '⚽', bg: 'bg-sky', subs: [
+  { label: 'Services', emoji: '⚽', bg: 'bg-sky', subs: [
     { name: 'Sports Equipment', icon: '⚽' },
     { name: 'Musical Instruments & Gear', icon: '🎸' },
     { name: 'Books & Table Games', icon: '📚' },

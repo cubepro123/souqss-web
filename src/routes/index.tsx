@@ -655,18 +655,15 @@ function Home() {
 
       {/* ── MOBILE BOTTOM NAV ── */}
       <BottomNav
-        active={bottomNav}
+        active={bottomNav as any}
         onHome={() => { setBottomNav('home'); setMobileSearchOpen(false); }}
-        onSearch={() => { setBottomNav('search'); setMobileSearchOpen(true); }}
-        onPost={() => { setBottomNav('post'); openPostAd(); }}
-        onSaved={() => { setBottomNav('saved'); setSavedOpen(true); }}
+        onPost={() => { setBottomNav('post' as any); openPostAd(); }}
         onProfile={() => {
-          setBottomNav('profile');
+          setBottomNav('profile' as any);
           if (!user) { setAuthMode('signin'); setAuthOpen(true); }
           else navigate({ to: '/profile' });
         }}
         user={user}
-        savedCount={savedIds.size}
       />
 
       {/* ── MODALS ── */}

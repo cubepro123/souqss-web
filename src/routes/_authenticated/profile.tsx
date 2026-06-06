@@ -9,8 +9,12 @@ export const Route = createFileRoute('/_authenticated/profile')({
   head: () => ({ meta: [{ title: 'My Profile — SouqSS' }] }),
 });
 
-const TABS = ['My Listings', 'Saved', 'Messages', 'Settings'] as const;
-type Tab = typeof TABS[number];
+interface Message {
+  id: string; body: string; read: boolean; created_at: string;
+  listing_id: string; sender_id: string; receiver_id: string;
+  listings?: { title: string; emoji: string };
+  sender?: { full_name: string | null };
+}
 
 function timeAgo(d: string) {
   const diff = Date.now() - new Date(d).getTime();
@@ -22,43 +26,56 @@ function timeAgo(d: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-interface Message {
-  id: string;
-  body: string;
-  read: boolean;
-  created_at: string;
-  listing_id: string;
-  sender_id: string;
-  receiver_id: string;
-  listings?: { title: string; emoji: string };
-  sender?: { full_name: string | null };
-}
+const ROW = ({ icon, iconBg, label, sub, onClick, right }: { icon: string; iconBg: string; label: string; sub?: string; onClick?: () => void; right?: React.ReactNode }) => (
+  <div onClick={onClick} className={`flex items-center gap-3.5 px-4 py-3.5 border-b border-[#1e1e1e] last:border-0 ${onClick ? 'cursor-pointer active:bg-[#1a1a1a]' : ''}`}>
+    <div style={{ width: 38, height: 38, borderRadius: 10, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{icon}</div>
+    <div className="flex-1 min-w-0">
+      <div style={{ fontSize: 14.5, fontWeight: 600, color: '#f0f0f0' }}>{label}</div>
+      {sub && <div style={{ fontSize: 12, color: '#666', marginTop: 1 }}>{sub}</div>}
+    </div>
+    {right || (onClick && <span style={{ color: '#444', fontSize: 18 }}>›</span>)}
+  </div>
+);
+
+const SECTION = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <div className="mb-4">
+    <div style={{ fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#555', padding: '0 20px', marginBottom: 8 }}>{title}</div>
+    <div style={{ background: '#161616', borderRadius: 16, overflow: 'hidden', margin: '0 16px', border: '1px solid #1e1e1e' }}>{children}</div>
+  </div>
+);
 
 function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>('My Listings');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [savedListings, setSavedListings] = useState<Listing[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSavedMsg] = useState(false);
+  const [section, setSection] = useState<string | null>(null);
 
-  // Settings form state
+  // Edit profile state
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [savedMsg, setSavedMsg] = useState(false);
+
+  // Password
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
   const [pwMsg, setPwMsg] = useState('');
+
+  // Notif prefs
   const [notifMessages, setNotifMessages] = useState(true);
   const [notifSaves, setNotifSaves] = useState(true);
-  const [notifPriceDrops, setNotifPriceDrops] = useState(false);
-  const [notifPromotions, setNotifPromotions] = useState(false);
   const [notifSaved, setNotifSaved] = useState(false);
-  const [listingTab, setListingTab] = useState<'active' | 'sold'>('active');
+
+  // Dark mode (local)
+  const [darkMode, setDarkMode] = useState(true);
+
+  // Listing tabs
+  const [listingTab, setListingTab] = useState<'active'|'sold'>('active');
 
   useEffect(() => {
     if (!authLoading && !user) navigate({ to: '/' });
@@ -66,47 +83,40 @@ function ProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    loadAll();
-  }, [user?.id]);
-
-  const loadAll = async () => {
     setLoading(true);
-    const [p, l, s, m] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', user!.id).single(),
-      supabase.from('listings').select('*').eq('user_id', user!.id).neq('status', 'deleted').order('created_at', { ascending: false }),
-      supabase.from('saved_listings').select('listing_id, listings(*)').eq('user_id', user!.id).order('created_at', { ascending: false }),
-      supabase.from('messages').select('*, listings(title, emoji), sender:profiles!messages_sender_id_fkey(full_name)').or(`sender_id.eq.${user!.id},receiver_id.eq.${user!.id}`).order('created_at', { ascending: false }),
-    ]);
-    const prof = p.data as Profile;
-    setProfile(prof);
-    setFullName(prof?.full_name || '');
-    setPhone(prof?.phone || '');
-    setLocation(prof?.location || '');
-    setNotifMessages(prof?.notif_messages ?? true);
-    setNotifSaves(prof?.notif_saves ?? true);
-    setNotifPriceDrops(prof?.notif_price_drops ?? false);
-    setNotifPromotions(prof?.notif_promotions ?? false);
-    setMyListings((l.data || []) as Listing[]);
-    setSavedListings(((s.data || []).map((r: any) => r.listings).filter(Boolean)) as Listing[]);
-    setMessages((m.data || []) as Message[]);
-    setLoading(false);
-  };
+    Promise.all([
+      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('listings').select('*').eq('user_id', user.id).neq('status','deleted').order('created_at',{ascending:false}),
+      supabase.from('saved_listings').select('listing_id, listings(*)').eq('user_id', user.id).order('created_at',{ascending:false}),
+      supabase.from('messages').select('*, listings(title,emoji), sender:profiles!messages_sender_id_fkey(full_name)').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at',{ascending:false}),
+    ]).then(([p, l, s, m]) => {
+      const prof = p.data as Profile;
+      setProfile(prof);
+      setFullName(prof?.full_name || '');
+      setPhone(prof?.phone || '');
+      setLocation(prof?.location || '');
+      setNotifMessages((prof as any)?.notif_messages ?? true);
+      setNotifSaves((prof as any)?.notif_saves ?? true);
+      setMyListings((l.data || []) as Listing[]);
+      setSavedListings(((s.data||[]).map((r:any) => r.listings).filter(Boolean)) as Listing[]);
+      setMessages((m.data||[]) as Message[]);
+      setLoading(false);
+    });
+  }, [user?.id]);
 
   const saveProfile = async () => {
     setSaving(true);
     await supabase.from('profiles').update({ full_name: fullName, phone, location }).eq('id', user!.id);
-    setSaving(false);
-    setSavedMsg(true);
-    setTimeout(() => setSavedMsg(false), 2000);
+    setSaving(false); setSavedMsg(true); setTimeout(() => setSavedMsg(false), 2000);
   };
 
-  const changePassword = async () => {
+  const changePw = async () => {
     setPwMsg('');
-    if (newPassword.length < 6) { setPwMsg('Password must be at least 6 characters.'); return; }
-    if (newPassword !== confirmPassword) { setPwMsg('Passwords do not match.'); return; }
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (newPw.length < 6) { setPwMsg('Min 6 characters'); return; }
+    if (newPw !== confirmPw) { setPwMsg('Passwords do not match'); return; }
+    const { error } = await supabase.auth.updateUser({ password: newPw });
     if (error) setPwMsg(error.message);
-    else { setPwMsg('✓ Password updated!'); setNewPassword(''); setConfirmPassword(''); }
+    else { setPwMsg('✓ Password updated!'); setNewPw(''); setConfirmPw(''); }
   };
 
   const markSold = async (id: string) => {
@@ -120,308 +130,288 @@ function ProfilePage() {
     setMyListings(prev => prev.filter(l => l.id !== id));
   };
 
-  const unsave = async (id: string) => {
-    await supabase.from('saved_listings').delete().eq('user_id', user!.id).eq('listing_id', id);
-    setSavedListings(prev => prev.filter(l => l.id !== id));
-  };
+  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: '/' }); };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate({ to: '/' });
-  };
+  const inp = 'w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-[14px] text-white outline-none focus:border-[#E8440A] transition-colors';
 
-  const bgMap: Record<string, string> = {
-    'bg-peach': '#fde8de', 'bg-sky': '#ddeef8', 'bg-mint': '#ddf0e8',
-    'bg-lav': '#ede8f5', 'bg-sun': '#fef3d8', 'bg-rose': '#fde8e8',
-    'bg-sage': '#e8f0e8', 'bg-cream': '#f5f0e8', 'bg-steel': '#e8edf5',
-  };
-
-  const inp = 'w-full bg-[#f5f0ed] border-2 border-transparent rounded-xl px-4 py-3 text-[14px] outline-none focus:border-[#d94f1e] transition-colors';
-  const userInitial = (profile?.full_name || user?.email || '?').charAt(0).toUpperCase();
-  const unreadCount = messages.filter(m => !m.read && m.receiver_id === user?.id).length;
+  const userInitial = (profile?.full_name || user?.email || '?').slice(0, 2).toUpperCase();
+  const activeListings = myListings.filter(l => l.status === 'active');
+  const soldListings = myListings.filter(l => l.status === 'sold');
+  const unread = messages.filter(m => !m.read && m.receiver_id === user?.id).length;
 
   if (authLoading || loading) return (
-    <div className="min-h-screen bg-[#f2ede9] flex items-center justify-center" style={{ fontFamily: 'Inter, sans-serif' }}>
-      <div className="text-center text-[#aaa]">
-        <div className="text-4xl mb-3 animate-spin">⏳</div>
-        <div className="font-semibold">Loading profile…</div>
+    <div style={{ minHeight: '100vh', background: '#0e0e0e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+      <div style={{ textAlign: 'center' }}><div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>Loading…</div>
+    </div>
+  );
+
+  const bgMap: Record<string,string> = { 'bg-peach':'#fde8de','bg-sky':'#ddeef8','bg-mint':'#ddf0e8','bg-lav':'#ede8f5','bg-sun':'#fef3d8','bg-rose':'#fde8e8','bg-sage':'#e8f0e8','bg-cream':'#f5f0e8','bg-steel':'#e8edf5' };
+
+  // ── SUB-SECTION VIEWS ──
+  if (section === 'listings') return (
+    <div style={{ minHeight: '100vh', background: '#0e0e0e', color: '#f0f0f0', fontFamily: 'Plus Jakarta Sans, sans-serif', paddingBottom: 90 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: '1px solid #1e1e1e' }}>
+        <button onClick={() => setSection(null)} style={{ background: '#1e1e1e', border: 'none', borderRadius: 10, width: 36, height: 36, color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+        <h2 style={{ fontSize: 17, fontWeight: 700 }}>My Listings</h2>
+      </div>
+      <div style={{ display: 'flex', gap: 8, padding: '12px 16px' }}>
+        {(['active','sold'] as const).map(t => (
+          <button key={t} onClick={() => setListingTab(t)} style={{ padding: '7px 18px', borderRadius: 20, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', background: listingTab === t ? '#E8440A' : '#1e1e1e', color: listingTab === t ? '#fff' : '#888', fontFamily: 'inherit' }}>
+            {t.charAt(0).toUpperCase() + t.slice(1)} ({t === 'active' ? activeListings.length : soldListings.length})
+          </button>
+        ))}
+      </div>
+      <div style={{ padding: '0 16px' }}>
+        {(listingTab === 'active' ? activeListings : soldListings).length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#555' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+            <div style={{ fontWeight: 600 }}>No {listingTab} listings</div>
+            {listingTab === 'active' && <button onClick={() => navigate({ to: '/post-ad' })} style={{ marginTop: 16, background: '#E8440A', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>＋ Post an Ad</button>}
+          </div>
+        ) : (listingTab === 'active' ? activeListings : soldListings).map(L => (
+          <div key={L.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#161616', borderRadius: 14, padding: 12, marginBottom: 10, border: '1px solid #1e1e1e' }}>
+            <div style={{ width: 56, height: 56, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0, background: bgMap[L.bg_color||'bg-peach']||'#fde8de' }}>{L.emoji||'🛒'}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: '#f0f0f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{L.title}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#E8440A', marginTop: 2 }}>{L.price_label}</div>
+              <div style={{ fontSize: 11.5, color: '#555', marginTop: 1 }}>👁 {L.views??0} · {timeAgo(L.created_at)}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {L.status === 'active' && <button onClick={() => markSold(L.id)} style={{ fontSize: 11, background: '#1a2e1a', color: '#4caf50', border: '1px solid #2a4a2a', borderRadius: 8, padding: '5px 10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>✓ Sold</button>}
+              <button onClick={() => deleteListing(L.id)} style={{ fontSize: 11, background: '#2e1a1a', color: '#e57373', border: '1px solid #4a2a2a', borderRadius: 8, padding: '5px 10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>🗑</button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 
-  const activeListings = myListings.filter(l => l.status === 'active');
-  const soldListings = myListings.filter(l => l.status === 'sold');
+  if (section === 'saved') return (
+    <div style={{ minHeight: '100vh', background: '#0e0e0e', color: '#f0f0f0', fontFamily: 'Plus Jakarta Sans, sans-serif', paddingBottom: 90 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: '1px solid #1e1e1e' }}>
+        <button onClick={() => setSection(null)} style={{ background: '#1e1e1e', border: 'none', borderRadius: 10, width: 36, height: 36, color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+        <h2 style={{ fontSize: 17, fontWeight: 700 }}>Saved Ads</h2>
+      </div>
+      <div style={{ padding: 16 }}>
+        {savedListings.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#555' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🔖</div>
+            <div style={{ fontWeight: 600 }}>No saved listings</div>
+          </div>
+        ) : savedListings.map(L => (
+          <div key={L.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#161616', borderRadius: 14, padding: 12, marginBottom: 10, border: '1px solid #1e1e1e' }}>
+            <div style={{ width: 56, height: 56, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0, background: bgMap[L.bg_color||'bg-peach']||'#fde8de' }}>{L.emoji||'🛒'}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: '#f0f0f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{L.title}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#E8440A', marginTop: 2 }}>{L.price_label}</div>
+              <div style={{ fontSize: 11.5, color: '#555', marginTop: 1 }}>📍 {L.location}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
-  return (
-    <div className="min-h-screen bg-[#f2ede9] pb-10" style={{ fontFamily: 'Inter, sans-serif' }}>
+  if (section === 'messages') return (
+    <div style={{ minHeight: '100vh', background: '#0e0e0e', color: '#f0f0f0', fontFamily: 'Plus Jakarta Sans, sans-serif', paddingBottom: 90 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: '1px solid #1e1e1e' }}>
+        <button onClick={() => setSection(null)} style={{ background: '#1e1e1e', border: 'none', borderRadius: 10, width: 36, height: 36, color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+        <h2 style={{ fontSize: 17, fontWeight: 700 }}>Messages</h2>
+      </div>
+      <div style={{ padding: 16 }}>
+        {messages.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#555' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>💬</div>
+            <div style={{ fontWeight: 600 }}>No messages yet</div>
+          </div>
+        ) : messages.map(m => {
+          const isSender = m.sender_id === user?.id;
+          const isUnread = !m.read && m.receiver_id === user?.id;
+          return (
+            <div key={m.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, background: isUnread ? '#1a1410' : '#161616', borderRadius: 14, padding: 14, marginBottom: 10, border: `1px solid ${isUnread ? '#3a2a1a' : '#1e1e1e'}` }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#E8440A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
+                {(m.sender?.full_name || '?').charAt(0).toUpperCase()}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: '#f0f0f0' }}>{isSender ? 'You' : m.sender?.full_name || 'Buyer'}</span>
+                  <span style={{ fontSize: 11, color: '#555' }}>{timeAgo(m.created_at)}</span>
+                </div>
+                <div style={{ fontSize: 11.5, color: '#666', marginBottom: 4 }}>Re: {m.listings?.title || 'a listing'}</div>
+                <div style={{ fontSize: 13, color: '#aaa', lineHeight: 1.5 }}>{m.body}</div>
+              </div>
+              {isUnread && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#E8440A', flexShrink: 0, marginTop: 6 }} />}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
-      {/* ── NAV ── */}
-      <nav className="bg-white border-b border-[#e5ddd8] sticky top-0 z-[200] shadow-sm">
-        <div className="max-w-[1000px] mx-auto px-4 flex items-center gap-3 h-[60px]">
-          <button onClick={() => navigate({ to: '/' })} className="flex items-center gap-2 flex-shrink-0">
-            <div className="w-9 h-9 bg-[#1a1a1a] rounded-[10px] flex items-center justify-center text-lg">🛍️</div>
-            <span className="text-xl font-black">souq<span className="text-[#d94f1e]">SS</span></span>
+  if (section === 'edit') return (
+    <div style={{ minHeight: '100vh', background: '#0e0e0e', color: '#f0f0f0', fontFamily: 'Plus Jakarta Sans, sans-serif', paddingBottom: 90 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: '1px solid #1e1e1e' }}>
+        <button onClick={() => setSection(null)} style={{ background: '#1e1e1e', border: 'none', borderRadius: 10, width: 36, height: 36, color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+        <h2 style={{ fontSize: 17, fontWeight: 700 }}>Edit Profile</h2>
+      </div>
+      <div style={{ padding: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
+          <div style={{ width: 80, height: 80, borderRadius: 20, background: '#E8440A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 900, color: '#fff' }}>{userInitial}</div>
+        </div>
+        <div className="space-y-4">
+          {[
+            { label: 'Full Name', value: fullName, set: setFullName, type: 'text', placeholder: 'Your full name' },
+            { label: 'Phone', value: phone, set: setPhone, type: 'tel', placeholder: '+211912345678' },
+            { label: 'Location', value: location, set: setLocation, type: 'text', placeholder: 'e.g. Juba, Hai Amarat' },
+          ].map(f => (
+            <div key={f.label}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>{f.label}</label>
+              <input className={inp} type={f.type} placeholder={f.placeholder} value={f.value} onChange={e => f.set(e.target.value)} />
+            </div>
+          ))}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#666', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Email</label>
+            <input className={inp + ' opacity-50 cursor-not-allowed'} type="email" value={user?.email || ''} disabled />
+          </div>
+          {savedMsg && <div style={{ background: '#1a2e1a', border: '1px solid #2a4a2a', color: '#4caf50', padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600 }}>✓ Profile saved!</div>}
+          <button onClick={saveProfile} disabled={saving} style={{ width: '100%', background: '#E8440A', color: '#fff', border: 'none', padding: 14, borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit' }}>
+            {saving ? 'Saving…' : 'Save Changes'}
           </button>
-          <div className="flex-1" />
-          <button onClick={() => navigate({ to: '/' })} className="text-[13px] font-semibold text-[#777] hover:text-[#1a1a1a] transition-colors">← Back to listings</button>
-          <button onClick={signOut} className="text-[13px] font-semibold text-red-500 hover:text-red-700 transition-colors border border-red-200 rounded-lg px-3 py-1.5">Sign Out</button>
-        </div>
-      </nav>
-
-      <div className="max-w-[1000px] mx-auto px-4 py-6">
-
-        {/* ── PROFILE HEADER ── */}
-        <div className="bg-white rounded-2xl border border-[#e5ddd8] overflow-hidden mb-5 shadow-sm">
-          <div className="h-24 bg-gradient-to-br from-[#1e4e1e] to-[#2d6e2d]" />
-          <div className="px-6 pb-6">
-            <div className="flex items-end justify-between -mt-10 mb-4">
-              <div className="w-20 h-20 bg-[#d94f1e] rounded-full border-4 border-white flex items-center justify-center text-white text-3xl font-black shadow-lg">
-                {userInitial}
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                {profile?.verified && <span className="bg-green-50 text-green-700 border border-green-200 text-[11px] font-bold px-3 py-1 rounded-full">✓ Verified</span>}
-                <span className="bg-[#f5f0ed] text-[#777] text-[11px] font-bold px-3 py-1 rounded-full">{profile?.rating ?? '5.0'} ★ ({profile?.review_count ?? 0} reviews)</span>
-              </div>
-            </div>
-            <div className="text-xl font-extrabold">{profile?.full_name || 'Your Name'}</div>
-            <div className="text-[13px] text-[#777] mt-0.5">{user?.email}</div>
-            {profile?.location && <div className="text-[13px] text-[#777] mt-0.5">📍 {profile.location}</div>}
-            {profile?.phone && <div className="text-[13px] text-[#777] mt-0.5">📞 {profile.phone}</div>}
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-[#f0ebe6]">
-              {[
-                { label: 'Active Listings', value: activeListings.length, icon: '📋' },
-                { label: 'Items Sold', value: soldListings.length, icon: '✅' },
-                { label: 'Saved', value: savedListings.length, icon: '❤️' },
-              ].map(s => (
-                <div key={s.label} className="text-center bg-[#faf5f2] rounded-xl py-3">
-                  <div className="text-lg mb-0.5">{s.icon}</div>
-                  <div className="text-[20px] font-extrabold">{s.value}</div>
-                  <div className="text-[11px] text-[#aaa] font-semibold">{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
-        {/* ── TABS ── */}
-        <div className="bg-white rounded-2xl border border-[#e5ddd8] overflow-hidden shadow-sm">
-          <div className="flex border-b border-[#f0ebe6] overflow-x-auto">
-            {TABS.map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`flex-1 min-w-[100px] py-3.5 text-[13px] font-bold border-b-2 transition-colors whitespace-nowrap relative ${tab === t ? 'border-[#d94f1e] text-[#d94f1e]' : 'border-transparent text-[#999]'}`}
-              >
-                {t}
-                {t === 'Messages' && unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 bg-[#d94f1e] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unreadCount}</span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="p-5">
-
-            {/* ── MY LISTINGS ── */}
-            {tab === 'My Listings' && (
-              <div>
-                <div className="flex gap-2 mb-4">
-                  {(['active', 'sold'] as const).map(t => (
-                    <button key={t} onClick={() => setListingTab(t)} className={`px-4 py-2 rounded-full text-[12px] font-bold capitalize transition-colors ${listingTab === t ? 'bg-[#d94f1e] text-white' : 'bg-[#f5f0ed] text-[#777]'}`}>
-                      {t} ({t === 'active' ? activeListings.length : soldListings.length})
-                    </button>
-                  ))}
-                </div>
-                {(listingTab === 'active' ? activeListings : soldListings).length === 0 ? (
-                  <div className="text-center py-12 text-[#aaa]">
-                    <div className="text-4xl mb-3">📭</div>
-                    <div className="font-semibold">No {listingTab} listings</div>
-                    {listingTab === 'active' && <button onClick={() => navigate({ to: '/' })} className="mt-3 bg-[#d94f1e] text-white rounded-xl px-5 py-2.5 text-[13px] font-bold">＋ Post an Ad</button>}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {(listingTab === 'active' ? activeListings : soldListings).map(L => (
-                      <div key={L.id} className="flex items-center gap-3 bg-[#faf5f2] rounded-xl p-3.5 border border-[#f0ebe6]">
-                        <div className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl flex-shrink-0" style={{ background: bgMap[L.bg_color || 'bg-peach'] || '#fde8de' }}>{L.emoji || '🛒'}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[13px] font-bold truncate">{L.title}</div>
-                          <div className="text-[#d94f1e] font-bold text-[13px]">{L.price_label}</div>
-                          <div className="flex items-center gap-3 mt-0.5">
-                            <span className="text-[11px] text-[#aaa]">👁 {L.views ?? 0} views</span>
-                            <span className="text-[11px] text-[#aaa]">{timeAgo(L.created_at)}</span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-1.5 flex-shrink-0">
-                          {L.status === 'active' && (
-                            <button onClick={() => markSold(L.id)} className="text-[11px] font-bold bg-green-50 text-green-700 border border-green-200 rounded-lg px-2.5 py-1.5 hover:bg-green-100 transition-colors">✓ Sold</button>
-                          )}
-                          <button onClick={() => deleteListing(L.id)} className="text-[11px] font-bold bg-red-50 text-red-600 border border-red-200 rounded-lg px-2.5 py-1.5 hover:bg-red-100 transition-colors">🗑 Delete</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── SAVED ── */}
-            {tab === 'Saved' && (
-              savedListings.length === 0 ? (
-                <div className="text-center py-12 text-[#aaa]">
-                  <div className="text-4xl mb-3">🔖</div>
-                  <div className="font-semibold">No saved listings yet</div>
-                  <div className="text-[13px] mt-1">Tap 🔖 on any listing to save it</div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {savedListings.map(L => (
-                    <div key={L.id} className="flex items-center gap-3 bg-[#faf5f2] rounded-xl p-3.5 border border-[#f0ebe6]">
-                      <div className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl flex-shrink-0" style={{ background: bgMap[L.bg_color || 'bg-peach'] || '#fde8de' }}>{L.emoji || '🛒'}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-bold truncate">{L.title}</div>
-                        <div className="text-[#d94f1e] font-bold text-[13px]">{L.price_label}</div>
-                        <div className="text-[11px] text-[#aaa] mt-0.5">📍 {L.location}</div>
-                      </div>
-                      <button onClick={() => unsave(L.id)} className="text-[#ccc] hover:text-red-500 transition-colors text-lg px-1">✕</button>
-                    </div>
-                  ))}
-                </div>
-              )
-            )}
-
-            {/* ── MESSAGES ── */}
-            {tab === 'Messages' && (
-              messages.length === 0 ? (
-                <div className="text-center py-12 text-[#aaa]">
-                  <div className="text-4xl mb-3">💬</div>
-                  <div className="font-semibold">No messages yet</div>
-                  <div className="text-[13px] mt-1">Messages from buyers will appear here</div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {messages.map(m => {
-                    const isSender = m.sender_id === user?.id;
-                    const isUnread = !m.read && m.receiver_id === user?.id;
-                    return (
-                      <div key={m.id} className={`flex items-start gap-3 rounded-xl p-4 border transition-colors ${isUnread ? 'bg-[#fff5f0] border-[#fde8de]' : 'bg-[#faf5f2] border-[#f0ebe6]'}`}>
-                        <div className="w-9 h-9 bg-[#d94f1e] rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                          {(m.sender?.full_name || '?').charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 mb-0.5">
-                            <span className="text-[13px] font-bold">{isSender ? 'You' : m.sender?.full_name || 'Buyer'}</span>
-                            <span className="text-[11px] text-[#aaa] flex-shrink-0">{timeAgo(m.created_at)}</span>
-                          </div>
-                          <div className="text-[11px] text-[#aaa] mb-1">Re: {m.listings?.title || 'a listing'}</div>
-                          <div className="text-[13px] text-[#555] leading-relaxed">{m.body}</div>
-                        </div>
-                        {isUnread && <div className="w-2 h-2 bg-[#d94f1e] rounded-full flex-shrink-0 mt-1.5" />}
-                      </div>
-                    );
-                  })}
-                </div>
-              )
-            )}
-
-            {/* ── SETTINGS ── */}
-            {tab === 'Settings' && (
-              <div className="max-w-[500px] space-y-6">
-
-                {/* Profile info */}
-                <div>
-                  <h3 className="text-[15px] font-extrabold mb-4 flex items-center gap-2">👤 Profile Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Full Name</label>
-                      <input className={inp} type="text" placeholder="Your full name" value={fullName} onChange={e => setFullName(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Email</label>
-                      <input className={inp + ' opacity-60 cursor-not-allowed'} type="email" value={user?.email || ''} disabled />
-                      <p className="text-[11px] text-[#aaa] mt-1">Email cannot be changed here for security reasons.</p>
-                    </div>
-                    <div>
-                      <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Phone Number</label>
-                      <input className={inp} type="tel" placeholder="+211912345678" value={phone} onChange={e => setPhone(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Location</label>
-                      <input className={inp} type="text" placeholder="e.g. Juba, Hai Amarat" value={location} onChange={e => setLocation(e.target.value)} />
-                    </div>
-                    <button onClick={saveProfile} disabled={saving} className="bg-[#d94f1e] text-white rounded-xl px-6 py-3 text-[14px] font-bold disabled:opacity-60 hover:bg-[#c04418] transition-colors">
-                      {saving ? 'Saving…' : saved ? '✓ Saved!' : 'Save Changes'}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="h-px bg-[#f0ebe6]" />
-
-                {/* Change password */}
-                <div>
-                  <h3 className="text-[15px] font-extrabold mb-4 flex items-center gap-2">🔒 Change Password</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">New Password</label>
-                      <input className={inp} type="password" placeholder="At least 6 characters" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="text-[12px] font-bold text-[#999] uppercase tracking-wide block mb-1.5">Confirm New Password</label>
-                      <input className={inp} type="password" placeholder="Repeat new password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-                    </div>
-                    {pwMsg && <p className={`text-[13px] font-semibold px-3 py-2 rounded-lg ${pwMsg.startsWith('✓') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>{pwMsg}</p>}
-                    <button onClick={changePassword} className="bg-[#1a1a1a] text-white rounded-xl px-6 py-3 text-[14px] font-bold hover:bg-[#333] transition-colors">Update Password</button>
-                  </div>
-                </div>
-
-                <div className="h-px bg-[#f0ebe6]" />
-
-                {/* Notifications prefs */}
-                <div>
-                  <h3 className="text-[15px] font-extrabold mb-4 flex items-center gap-2">🔔 Notification Preferences</h3>
-                  <div className="space-y-3">
-                    {([
-                      { key: 'messages', label: 'Messages', desc: 'Get notified when someone messages you', val: notifMessages, set: setNotifMessages },
-                      { key: 'saves', label: 'Listing saves', desc: 'Get notified when someone saves your listing', val: notifSaves, set: setNotifSaves },
-                      { key: 'price_drops', label: 'Price drops', desc: 'Get notified on saved listings with price drops', val: notifPriceDrops, set: setNotifPriceDrops },
-                      { key: 'promotions', label: 'Promotions', desc: 'Receive SouqSS news and offers', val: notifPromotions, set: setNotifPromotions },
-                    ] as const).map(item => (
-                      <div key={item.key} className="flex items-center justify-between py-2">
-                        <div>
-                          <div className="text-[13px] font-semibold">{item.label}</div>
-                          <div className="text-[12px] text-[#aaa]">{item.desc}</div>
-                        </div>
-                        <button
-                          onClick={() => item.set(!item.val)}
-                          className={`w-11 h-6 rounded-full relative flex-shrink-0 transition-colors ${item.val ? 'bg-[#d94f1e]' : 'bg-[#ddd]'}`}
-                        >
-                          <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${item.val ? 'right-0.5' : 'left-0.5'}`} />
-                        </button>
-                      </div>
-                    ))}
-                  {notifSaved && <div className="text-[12px] text-green-600 font-semibold bg-green-50 px-3 py-2 rounded-lg border border-green-200">✓ Preferences saved!</div>}
-                  <button onClick={async () => {
-                    await supabase.from('profiles').update({ notif_messages: notifMessages, notif_saves: notifSaves, notif_price_drops: notifPriceDrops, notif_promotions: notifPromotions }).eq('id', user!.id);
-                    setNotifSaved(true); setTimeout(() => setNotifSaved(false), 2000);
-                  }} className="bg-[#d94f1e] text-white rounded-xl px-5 py-2.5 text-[13px] font-bold hover:bg-[#c04418] transition-colors">Save Preferences</button>
-                  </div>
-                </div>
-
-                <div className="h-px bg-[#f0ebe6]" />
-
-                {/* Danger zone */}
-                <div>
-                  <h3 className="text-[15px] font-extrabold mb-4 text-red-600 flex items-center gap-2">⚠️ Account</h3>
-                  <div className="space-y-3">
-                    <button onClick={signOut} className="w-full border-2 border-red-200 text-red-600 rounded-xl py-3 text-[14px] font-bold hover:bg-red-50 transition-colors">Sign Out</button>
-                    <button onClick={() => confirm('Are you sure? This cannot be undone.') && alert('Please contact support@souqss.tech to delete your account.')} className="w-full text-[13px] text-[#ccc] hover:text-red-400 transition-colors py-1">Delete my account</button>
-                  </div>
-                </div>
-              </div>
-            )}
+        <div style={{ marginTop: 32, paddingTop: 28, borderTop: '1px solid #1e1e1e' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: '#555', marginBottom: 14 }}>Change Password</div>
+          <div className="space-y-3">
+            <input className={inp} type="password" placeholder="New password" value={newPw} onChange={e => setNewPw(e.target.value)} />
+            <input className={inp} type="password" placeholder="Confirm new password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} />
+            {pwMsg && <div style={{ fontSize: 13, fontWeight: 600, color: pwMsg.startsWith('✓') ? '#4caf50' : '#e57373', background: pwMsg.startsWith('✓') ? '#1a2e1a' : '#2e1a1a', padding: '10px 14px', borderRadius: 10 }}>{pwMsg}</div>}
+            <button onClick={changePw} style={{ width: '100%', background: '#1e1e1e', color: '#f0f0f0', border: '1px solid #2a2a2a', padding: 14, borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit' }}>Update Password</button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+
+  // ── MAIN PROFILE VIEW ──
+  return (
+    <div style={{ minHeight: '100vh', background: '#0e0e0e', color: '#f0f0f0', fontFamily: 'Plus Jakarta Sans, sans-serif', paddingBottom: 100 }}>
+
+      {/* Top bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: '#f0f0f0' }}>My Profile</h1>
+        <button onClick={() => setSection('edit')} style={{ width: 38, height: 38, borderRadius: 10, background: '#1e1e1e', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, cursor: 'pointer', color: '#888' }}>⚙️</button>
+      </div>
+
+      {/* Premium upgrade banner */}
+      <div style={{ margin: '0 16px 20px', background: 'linear-gradient(135deg,#2a1f0a,#1e1608)', borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #3a2e10' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 22 }}>⭐</span>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#ffd460' }}>Upgrade to Premium</div>
+            <div style={{ fontSize: 12, color: '#888', marginTop: 1 }}>Unlimited ads, 10 photos, verified badge & more — SSP 15,000/mo</div>
+          </div>
+        </div>
+        <button onClick={() => setSection('premium')} style={{ background: 'none', border: 'none', color: '#ffd460', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'inherit' }}>Upgrade →</button>
+      </div>
+
+      {/* Avatar + info */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '0 20px', marginBottom: 20 }}>
+        <div style={{ width: 68, height: 68, borderRadius: 18, background: '#E8440A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 900, color: '#fff', flexShrink: 0 }}>{userInitial}</div>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#f0f0f0' }}>{profile?.full_name || 'Your Name'}</div>
+          {profile?.location && <div style={{ fontSize: 13, color: '#666', marginTop: 2 }}>📍 {profile.location}</div>}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#1e1e1e', border: '1px solid #333', borderRadius: 20, padding: '3px 10px', marginTop: 6 }}>
+            <span style={{ fontSize: 12 }}>⚠️</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#aaa' }}>Basic Account</span>
+          </div>
+          <div style={{ fontSize: 12, color: '#555', marginTop: 5 }}>Free plan · <span style={{ color: '#E8440A', fontWeight: 600, cursor: 'pointer' }} onClick={() => setSection('premium')}>Upgrade ↑</span></div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', margin: '0 16px 24px', background: '#161616', borderRadius: 16, overflow: 'hidden', border: '1px solid #1e1e1e' }}>
+        {[
+          { label: 'Ads Posted', value: activeListings.length },
+          { label: 'Saved', value: savedListings.length },
+          { label: 'Reviews', value: profile?.review_count ?? 0 },
+        ].map((s, i) => (
+          <div key={s.label} style={{ textAlign: 'center', padding: '16px 8px', borderRight: i < 2 ? '1px solid #1e1e1e' : undefined }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#E8440A' }}>{s.value}</div>
+            <div style={{ fontSize: 11.5, color: '#555', marginTop: 3 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Business */}
+      <SECTION title="Business">
+        <ROW icon="🏪" iconBg="#1a1e2e" label="Register Business" sub="Create a shop page and start selling" onClick={() => {}} />
+      </SECTION>
+
+      {/* My Activity */}
+      <SECTION title="My Activity">
+        <ROW icon="📋" iconBg="#2e1a1a" label="My Listings" sub={`${activeListings.length} active ads`} onClick={() => setSection('listings')} />
+        <ROW icon="🔖" iconBg="#1a1e2e" label="Saved Ads" sub={`${savedListings.length} saved`} onClick={() => setSection('saved')} />
+        <ROW icon="💬" iconBg="#1e2a1e" label="Messages" sub="Chat inbox" onClick={() => setSection('messages')}
+          right={<div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {unread > 0 && <span style={{ background: '#E8440A', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unread}</span>}
+            <span style={{ color: '#444', fontSize: 18 }}>›</span>
+          </div>}
+        />
+      </SECTION>
+
+      {/* Get verified */}
+      <div style={{ margin: '0 16px 16px', background: 'linear-gradient(135deg,#0d1a2e,#0a1020)', borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #1a2a3a' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 28 }}>🪪</span>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#60a5fa' }}>Get Verified</div>
+            <div style={{ fontSize: 12, color: '#555' }}>Upload your National ID to get the Verified badge</div>
+          </div>
+        </div>
+        <button style={{ background: '#60a5fa', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Verify</button>
+      </div>
+
+      {/* Account */}
+      <SECTION title="Account">
+        <ROW icon="👤" iconBg="#2e1a1a" label="Edit Profile" sub="Name, phone, photo, bio" onClick={() => setSection('edit')} />
+        <ROW icon="🛡️" iconBg="#1e2e1e" label="Verification" sub={profile?.verified ? 'Verified ✓' : 'Not verified'} onClick={() => {}} />
+      </SECTION>
+
+      {/* Preferences */}
+      <SECTION title="Preferences">
+        <ROW icon="🌙" iconBg="#1a1a2e" label="Dark Mode" sub="Easy on the eyes at night"
+          right={
+            <button onClick={() => setDarkMode(!darkMode)} style={{ width: 48, height: 26, borderRadius: 13, background: darkMode ? '#E8440A' : '#333', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background .2s' }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: darkMode ? 25 : 3, transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,.4)' }} />
+            </button>
+          }
+        />
+        <ROW icon="🔔" iconBg="#2e1e1a" label="Notifications" sub="Push alerts for messages"
+          right={
+            <button onClick={async () => { const v = !notifMessages; setNotifMessages(v); await supabase.from('profiles').update({ notif_messages: v }).eq('id', user!.id); }} style={{ width: 48, height: 26, borderRadius: 13, background: notifMessages ? '#E8440A' : '#333', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background .2s' }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: notifMessages ? 25 : 3, transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,.4)' }} />
+            </button>
+          }
+        />
+      </SECTION>
+
+      {/* Premium */}
+      <SECTION title="Premium">
+        <ROW icon="⭐" iconBg="#2a1f0a" label="SouqSS Premium" sub="Upgrade for SSP 15,000/mo" onClick={() => setSection('premium')}
+          right={<span style={{ color: '#ffd460', fontSize: 18 }}>›</span>}
+        />
+      </SECTION>
+
+      {/* Data */}
+      <SECTION title="Data">
+        <ROW icon="🔄" iconBg="#1a1e2e" label="Refresh Feed" sub="Pull latest from Supabase" onClick={() => { window.location.reload(); }} />
+        <ROW icon="🚪" iconBg="#2e1a1a" label="Sign Out" sub="Log out of your account" onClick={signOut} />
+      </SECTION>
+
+      {/* Footer */}
+      <div style={{ textAlign: 'center', padding: '24px 20px', color: '#333', fontSize: 12.5 }}>
+        <div>SouqSS v2.1 — Made in Juba 🇸🇸</div>
+        <div style={{ marginTop: 4 }}>Powered by Supabase</div>
       </div>
     </div>
   );
