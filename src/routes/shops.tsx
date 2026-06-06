@@ -5,10 +5,20 @@ import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/shops")({
   component: ShopsPage,
-  head: () => ({ meta: [
-    { title: "Shops & Service providers — SouqSS" },
-    { name: "description", content: "Browse online shops and service providers on SouqSS." },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Shops & Service Providers — SouqSS" },
+      { name: "description", content: "Discover trusted online shops and service providers across South Sudan on SouqSS." },
+      { property: "og:title", content: "Shops & Service Providers — SouqSS" },
+      { property: "og:description", content: "Discover trusted online shops and service providers across South Sudan on SouqSS." },
+      { property: "og:url", content: "/shops" },
+      { name: "twitter:title", content: "Shops & Service Providers — SouqSS" },
+      { name: "twitter:description", content: "Discover trusted online shops and service providers across South Sudan on SouqSS." },
+    ],
+    links: [
+      { rel: "canonical", href: "/shops" },
+    ],
+  }),
 });
 
 type Shop = {

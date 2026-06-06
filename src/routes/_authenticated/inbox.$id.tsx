@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/_authenticated/inbox/$id")({
@@ -9,8 +10,25 @@ export const Route = createFileRoute("/_authenticated/inbox/$id")({
   head: () => ({ meta: [{ title: "Chat — SouqSS" }] }),
 });
 
-type Msg = { id: string; sender_id: string; body: string; created_at: string; read_at: string | null };
+type Msg = {
+  id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+  status?: "queued" | "sending" | "sent" | "failed";
+  tempId?: string;
+};
 type Conv = { id: string; listing_id: string; buyer_id: string; seller_id: string };
+
+type QueuedMsg = { tempId: string; body: string; created_at: string };
+const queueKey = (convId: string, userId: string) => `souqss:msgq:${userId}:${convId}`;
+const readQueue = (k: string): QueuedMsg[] => {
+  try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; }
+};
+const writeQueue = (k: string, q: QueuedMsg[]) => {
+  try { localStorage.setItem(k, JSON.stringify(q)); } catch {}
+};
 
 function Thread() {
   const { id } = Route.useParams();
@@ -22,7 +40,21 @@ function Thread() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [online, setOnline] = useState<boolean>(typeof navigator === "undefined" ? true : navigator.onLine);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const flushingRef = useRef(false);
+
+  // Online / offline detection
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
 
   // Load conv + listing + other + messages
   useEffect(() => {
@@ -39,7 +71,18 @@ function Thread() {
       ]);
       setListing(l);
       setOther(p);
-      setMsgs(m ?? []);
+      // Restore any persisted queue from previous sessions
+      const persisted = readQueue(queueKey(id, user.id));
+      const queuedMsgs: Msg[] = persisted.map(q => ({
+        id: q.tempId,
+        tempId: q.tempId,
+        sender_id: user.id,
+        body: q.body,
+        created_at: q.created_at,
+        read_at: null,
+        status: "queued",
+      }));
+      setMsgs([...(m ?? []), ...queuedMsgs]);
       // mark incoming as read
       await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("conversation_id", id).neq("sender_id", user.id).is("read_at", null);
     })();
@@ -51,12 +94,23 @@ function Thread() {
     const ch = supabase.channel(`messages:${id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${id}` }, async (payload) => {
         const m = payload.new as Msg;
-        setMsgs(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m]);
+        setMsgs(prev => {
+          if (prev.some(x => x.id === m.id)) return prev;
+          // Replace any optimistic temp from same sender with same body
+          const withoutTemp = prev.filter(x => !(x.tempId && x.sender_id === m.sender_id && x.body === m.body));
+          return [...withoutTemp, m];
+        });
         if (m.sender_id !== user.id) {
           await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("id", m.id);
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          toast.error("Live updates unavailable", {
+            description: "New messages may not appear instantly. Pull to refresh.",
+          });
+        }
+      });
     return () => { supabase.removeChannel(ch); };
   }, [id, user]);
 
@@ -64,17 +118,91 @@ function Thread() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [msgs]);
 
+  const sendBody = async (body: string, tempId: string) => {
+    const { data, error } = await supabase.from("messages").insert({
+      conversation_id: id, sender_id: user!.id, body,
+    }).select().single();
+    if (error || !data) {
+      // If we're offline, keep as queued silently; otherwise mark failed
+      const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+      setMsgs(prev => prev.map(x => x.tempId === tempId ? { ...x, status: isOffline ? "queued" : "failed" } : x));
+      if (!isOffline) {
+        toast.error("Message failed to send", { description: error?.message || "Tap to retry." });
+      }
+      return false;
+    }
+    // Success — remove from persisted queue
+    if (user) {
+      const k = queueKey(id, user.id);
+      writeQueue(k, readQueue(k).filter(q => q.tempId !== tempId));
+    }
+    setMsgs(prev => {
+      const withoutTemp = prev.filter(x => x.tempId !== tempId);
+      return withoutTemp.some(x => x.id === data.id) ? withoutTemp : [...withoutTemp, { ...data, status: "sent" as const }];
+    });
+    return true;
+  };
+
+  // Flush queued messages when online
+  const flushQueue = async () => {
+    if (flushingRef.current || !user) return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
+    flushingRef.current = true;
+    try {
+      const k = queueKey(id, user.id);
+      let pending = readQueue(k);
+      for (const q of pending) {
+        setMsgs(prev => prev.map(x => x.tempId === q.tempId ? { ...x, status: "sending" } : x));
+        const ok = await sendBody(q.body, q.tempId);
+        if (!ok) break; // stop on first failure to preserve order
+      }
+    } finally {
+      flushingRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (online && user) void flushQueue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online, user, id]);
+
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() || !user || !conv || sending) return;
     setSending(true);
     const body = text.trim().slice(0, 4000);
     setText("");
-    const { data, error } = await supabase.from("messages").insert({
-      conversation_id: id, sender_id: user.id, body,
-    }).select().single();
-    if (!error && data) setMsgs(prev => prev.some(x => x.id === data.id) ? prev : [...prev, data]);
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const created_at = new Date().toISOString();
+    const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+    const optimistic: Msg = {
+      id: tempId,
+      tempId,
+      sender_id: user.id,
+      body,
+      created_at,
+      read_at: null,
+      status: isOffline ? "queued" : "sending",
+    };
+    setMsgs(prev => [...prev, optimistic]);
+    // Persist to queue first so a refresh / crash doesn't lose it
+    const k = queueKey(id, user.id);
+    writeQueue(k, [...readQueue(k), { tempId, body, created_at }]);
+    if (!isOffline) {
+      await sendBody(body, tempId);
+    }
     setSending(false);
+  };
+
+  const retry = async (m: Msg) => {
+    if (!m.tempId) return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setMsgs(prev => prev.map(x => x.tempId === m.tempId ? { ...x, status: "queued" } : x));
+      toast("Queued — will send when you're back online");
+      return;
+    }
+    setMsgs(prev => prev.map(x => x.tempId === m.tempId ? { ...x, status: "sending" } : x));
+    await sendBody(m.body, m.tempId);
   };
 
   return (
@@ -93,6 +221,11 @@ function Thread() {
             {listing && <Link to="/listings/$id" params={{ id: listing.id }} className="text-[12px] text-brand truncate block">{listing.title}</Link>}
           </div>
         </div>
+        {!online && (
+          <div className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[12px] font-semibold text-center py-1.5 border-t border-amber-500/30">
+            Offline — messages will send when you reconnect
+          </div>
+        )}
       </header>
 
       <main ref={scrollRef} className="flex-1 overflow-y-auto">
@@ -112,9 +245,21 @@ function Thread() {
             const mine = m.sender_id === user?.id;
             return (
               <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[75%] px-3.5 py-2 rounded-2xl text-[14px] ${mine ? "bg-brand text-white rounded-br-sm" : "bg-card border border-border rounded-bl-sm"}`}>
+                <div className={`max-w-[75%] px-3.5 py-2 rounded-2xl text-[14px] ${mine ? "bg-brand text-white rounded-br-sm" : "bg-card border border-border rounded-bl-sm"} ${m.status === "sending" || m.status === "queued" ? "opacity-70" : ""} ${m.status === "failed" ? "ring-1 ring-destructive" : ""}`}>
                   <div className="whitespace-pre-wrap break-words">{m.body}</div>
-                  <div className={`text-[10px] mt-1 ${mine ? "text-white/70" : "text-muted-foreground"}`}>{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+                  <div className={`text-[10px] mt-1 flex items-center gap-1.5 ${mine ? "text-white/70" : "text-muted-foreground"}`}>
+                    <span>{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                    {mine && m.status === "queued" && <span>· Queued</span>}
+                    {mine && m.status === "sending" && <span>· Sending…</span>}
+                    {mine && m.status === "failed" && (
+                      <button type="button" onClick={() => retry(m)} className="underline font-semibold text-white">
+                        Failed · Retry
+                      </button>
+                    )}
+                    {mine && (m.status === "sent" || !m.status) && (
+                      <span>· {m.read_at ? "Read" : "Sent"}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             );
