@@ -98,19 +98,21 @@ function EditListing() {
     });
     if (!parsed.success) { setErr(parsed.error.issues[0]?.message || "Check the form"); return; }
     setBusy(true);
+    if (!user) { setErr("Sign in required"); setBusy(false); return; }
     const { error } = await supabase.from("listings").update({
       ...parsed.data,
       images,
       status: String(fd.get("status") || "active"),
-    }).eq("id", id);
+    }).eq("id", id).eq("user_id", user.id);
     setBusy(false);
     if (error) { setErr(error.message); return; }
     navigate({ to: "/listings/$id", params: { id } });
   };
 
   const remove = async () => {
+    if (!user) return;
     if (!confirm("Delete this ad permanently?")) return;
-    await supabase.from("listings").delete().eq("id", id);
+    await supabase.from("listings").delete().eq("id", id).eq("user_id", user.id);
     navigate({ to: "/profile" });
   };
 
